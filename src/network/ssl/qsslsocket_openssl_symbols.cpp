@@ -49,6 +49,7 @@
 
 #include "qssl_p.h"
 #include "qsslsocket_openssl_symbols_p.h"
+#include <QtCore/qglobal.h>
 
 #ifdef Q_OS_WIN
 # include <private/qsystemlibrary_p.h>
@@ -364,6 +365,9 @@ DEFINEFUNC2(int, X509_check_issued, X509 *a, a, X509 *b, b, return -1, return)
 DEFINEFUNC(X509_NAME *, X509_get_issuer_name, X509 *a, a, return 0, return)
 DEFINEFUNC(X509_NAME *, X509_get_subject_name, X509 *a, a, return 0, return)
 DEFINEFUNC(int, X509_verify_cert, X509_STORE_CTX *a, a, return -1, return)
+#ifdef Q_OS_OSX
+DEFINEFUNC(int, X509_TEA_is_enabled, DUMMYARG, DUMMYARG, return 0, return)
+#endif
 DEFINEFUNC(int, X509_NAME_entry_count, X509_NAME *a, a, return 0, return)
 DEFINEFUNC2(X509_NAME_ENTRY *, X509_NAME_get_entry, X509_NAME *a, a, int b, b, return 0, return)
 DEFINEFUNC(ASN1_STRING *, X509_NAME_ENTRY_get_data, X509_NAME_ENTRY *a, a, return 0, return)
@@ -946,6 +950,9 @@ bool q_resolveOpenSslSymbols()
     RESOLVEFUNC(X509_get_issuer_name)
     RESOLVEFUNC(X509_get_subject_name)
     RESOLVEFUNC(X509_verify_cert)
+#ifdef Q_OS_OSX
+    RESOLVEFUNC(X509_TEA_is_enabled)
+#endif
     RESOLVEFUNC(d2i_X509)
     RESOLVEFUNC(i2d_X509)
 #ifdef SSLEAY_MACROS

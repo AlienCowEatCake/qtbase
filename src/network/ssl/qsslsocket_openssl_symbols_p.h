@@ -444,6 +444,9 @@ int q_X509_check_issued(X509 *a, X509 *b);
 X509_NAME *q_X509_get_issuer_name(X509 *a);
 X509_NAME *q_X509_get_subject_name(X509 *a);
 int q_X509_verify_cert(X509_STORE_CTX *ctx);
+#ifdef Q_OS_OSX
+int q_X509_TEA_is_enabled();
+#endif
 int q_X509_NAME_entry_count(X509_NAME *a);
 X509_NAME_ENTRY *q_X509_NAME_get_entry(X509_NAME *a,int b);
 ASN1_STRING *q_X509_NAME_ENTRY_get_data(X509_NAME_ENTRY *a);

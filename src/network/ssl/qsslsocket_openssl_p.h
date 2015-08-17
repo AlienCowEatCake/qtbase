@@ -134,6 +134,10 @@ public:
     void _q_caRootLoaded(QSslCertificate,QSslCertificate) Q_DECL_OVERRIDE;
 #endif
 
+#ifdef Q_OS_OSX
+    bool verifyTrustChainTEA();
+#endif
+
     Q_AUTOTEST_EXPORT static long setupOpenSslOptions(QSsl::SslProtocol protocol, QSsl::SslOptions sslOptions);
     static QSslCipher QSslCipher_from_SSL_CIPHER(SSL_CIPHER *cipher);
     static QList<QSslCertificate> STACKOFX509_to_QSslCertificates(STACK_OF(X509) *x509);

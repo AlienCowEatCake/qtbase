@@ -264,12 +264,29 @@ struct QSslErrorList
 {
     QMutex mutex;
     QList<QPair<int, int> > errors;
+#ifdef Q_OS_OSX
+    // OpenSSL 0.9.8 and its quirks (patches with TEA).
+    bool passToTEA;
+    QSslErrorList()
+        : passToTEA(false)
+    {
+    }
+#endif
 };
 Q_GLOBAL_STATIC(QSslErrorList, _q_sslErrorList)
 
 int q_X509Callback(int ok, X509_STORE_CTX *ctx)
 {
     if (!ok) {
+#ifdef Q_OS_OSX
+        if (_q_sslErrorList()->passToTEA) {
+            // That's the 'second pass' of the trust verification,
+            // no need to update our 'errors' and
+            // we do not want the 'vanilla' OpenSSL verification now,
+            // activate TEA instead ...
+            return ok;
+        }
+#endif
         // Store the error and at which depth the error was detected.
         _q_sslErrorList()->errors << qMakePair<int, int>(q_X509_STORE_CTX_get_error(ctx), q_X509_STORE_CTX_get_error_depth(ctx));
 #ifdef QSSLSOCKET_DEBUG
@@ -1140,6 +1157,14 @@ bool QSslSocketBackendPrivate::startHandshake()
     // store peer certificate chain
     storePeerCertificates();
 
+#if defined(Q_OS_OSX) && !defined(QT_LINKED_OPENSSL)
+    // Let's give the Apple's OpenSSL 0.9.8 the second chance,
+    // using its 'patched' Trust Evaluation Agent ...
+    // TODO: this means that TEA probably validates something we do not want to be validated ...
+    if (errorList.size() && verifyTrustChainTEA())
+        errorList.clear();
+#endif
+
     // Start translating errors.
     QList<QSslError> errors;
 
@@ -1494,6 +1519,82 @@ void QWindowsCaRootFetcher::start()
     emit finished(cert, trustedRoot);
     deleteLater();
 }
+#endif
+
+#ifdef Q_OS_OSX
+bool QSslSocketBackendPrivate::verifyTrustChainTEA()
+{
+    if (!q_X509_TEA_is_enabled())
+        return false;
+
+    const QList<QSslCertificate> & certificateChain = configuration.peerCertificateChain;
+    if (!certificateChain.length())
+        return false;
+
+    X509_STORE *certStore = q_X509_STORE_new();
+    if (!certStore)
+        return false;
+
+    /*
+    // It does not look like TEA cares much about what we consider valid CA certificates ...
+    if (s_loadRootCertsOnDemand)
+        setDefaultCaCertificates(defaultCaCertificates() + systemCaCertificates());
+
+    foreach (const QSslCertificate &caCertificate, QSslConfiguration::defaultConfiguration().caCertificates()) {
+        if (caCertificate.expiryDate() >= QDateTime::currentDateTime())
+            q_X509_STORE_add_cert(certStore, reinterpret_cast<X509 *>(caCertificate.handle()));
+            break;
+    }
+    */
+
+    // We register this callback only to immediately stop the 'standard'
+    // OpenSSL verification and skip to TEA.
+    X509_STORE_set_verify_cb_func(certStore, q_X509Callback);
+
+    // Build the chain of intermediate certificates
+    STACK_OF(X509) *intermediates = 0;
+    if (certificateChain.length() > 1) {
+        intermediates = (STACK_OF(X509) *) q_sk_new_null();
+
+        if (!intermediates) {
+            q_X509_STORE_free(certStore);
+            return false;
+        }
+
+        bool first = true;
+        foreach (const QSslCertificate &cert, certificateChain) {
+            if (first) {
+                first = false;
+                continue;
+            }
+
+            q_sk_push((STACK *)intermediates, reinterpret_cast<char *>(cert.handle()));
+        }
+    }
+
+    X509_STORE_CTX *storeContext = q_X509_STORE_CTX_new();
+    if (!storeContext) {
+        q_X509_STORE_free(certStore);
+        return false;
+    }
+
+    if (!q_X509_STORE_CTX_init(storeContext, certStore, reinterpret_cast<X509 *>(certificateChain[0].handle()), intermediates)) {
+        q_X509_STORE_CTX_free(storeContext);
+        q_X509_STORE_free(certStore);
+        return false;
+    }
+
+    // Inform our callback to bail out early:
+    _q_sslErrorList()->passToTEA = true;
+    const int result = q_X509_verify_cert(storeContext);
+    _q_sslErrorList()->passToTEA = false;
+
+    q_X509_STORE_CTX_free(storeContext);
+    q_sk_free((STACK *)intermediates);
+
+    return result == 1;
+}
+
 #endif
 
 void QSslSocketBackendPrivate::disconnectFromHost()
