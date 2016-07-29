@@ -78,7 +78,7 @@ mac {
     osx: LIBS += -framework ApplicationServices -framework IOKit
 
     # XCTest support
-    !lessThan(QMAKE_XCODE_VERSION, "6.0") {
+    !macx-clang-libstdc++ : !lessThan(QMAKE_XCODE_VERSION, "6.0") {
         OBJECTIVE_SOURCES += qxctestlogger.mm
         HEADERS += qxctestlogger_p.h
 

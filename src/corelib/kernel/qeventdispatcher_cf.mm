@@ -590,10 +590,12 @@ void QEventDispatcherCoreFoundation::updateTimers()
             : kCFTimeIntervalDistantFuture;
 
         if (!m_runLoopTimer) {
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_6)
             m_runLoopTimer = CFRunLoopTimerCreateWithHandler(kCFAllocatorDefault,
                 timeToFire, kCFTimeIntervalDistantFuture, 0, 0, ^(CFRunLoopTimerRef timer) {
                 processTimers(timer);
             });
+#endif
 
             CFRunLoopAddTimer(CFRunLoopGetMain(), m_runLoopTimer, kCFRunLoopCommonModes);
             qEventDispatcherDebug() << "Created new CFRunLoopTimer " << m_runLoopTimer;

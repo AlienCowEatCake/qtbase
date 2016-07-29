@@ -1280,6 +1280,7 @@ static QTabletEvent::TabletDevice wacomTabletDevice(NSEvent *theEvent)
 
 - (bool)handleGestureAsBeginEnd:(NSEvent *)event
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
     if (QSysInfo::QSysInfo::MacintoshVersion < QSysInfo::MV_10_11)
         return false;
 
@@ -1292,6 +1293,7 @@ static QTabletEvent::TabletDevice wacomTabletDevice(NSEvent *theEvent)
         [self endGestureWithEvent:event];
         return true;
     }
+#endif
 
     return false;
 }

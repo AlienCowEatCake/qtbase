@@ -208,7 +208,9 @@ static void convertToLevelAndOption(QNativeSocketEngine::SocketOption opt,
     case QNativeSocketEngine::ReceivePacketInformation:
         if (socketProtocol == QAbstractSocket::IPv6Protocol || socketProtocol == QAbstractSocket::AnyIPProtocol) {
             level = IPPROTO_IPV6;
+#ifdef IPV6_RECVPKTINFO
             n = IPV6_RECVPKTINFO;
+#endif
         } else if (socketProtocol == QAbstractSocket::IPv4Protocol) {
             level = IPPROTO_IP;
 #ifdef IP_PKTINFO
@@ -223,7 +225,9 @@ static void convertToLevelAndOption(QNativeSocketEngine::SocketOption opt,
     case QNativeSocketEngine::ReceiveHopLimit:
         if (socketProtocol == QAbstractSocket::IPv6Protocol || socketProtocol == QAbstractSocket::AnyIPProtocol) {
             level = IPPROTO_IPV6;
+#ifdef IPV6_RECVHOPLIMIT
             n = IPV6_RECVHOPLIMIT;
+#endif
         } else if (socketProtocol == QAbstractSocket::IPv4Protocol) {
 #ifdef IP_RECVTTL               // IP_RECVTTL is a non-standard extension supported on some OS
             level = IPPROTO_IP;
@@ -905,7 +909,11 @@ qint64 QNativeSocketEnginePrivate::nativeReceiveDatagram(char *data, qint64 maxS
                     && cmsgptr->cmsg_len >= CMSG_LEN(sizeof(sockaddr_dl))) {
                 sockaddr_dl *sdl = reinterpret_cast<sockaddr_dl *>(CMSG_DATA(cmsgptr));
 
+#if !defined (LLINDEX)
+                header->ifindex = ((sdl)->sdl_index);
+#else
                 header->ifindex = LLINDEX(sdl);
+#endif
             }
 #  endif
 #endif
