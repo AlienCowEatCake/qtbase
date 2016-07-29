@@ -95,6 +95,8 @@
 
 #if defined(Q_OS_MACX)
 #include <IOKit/pwr_mgt/IOPMLib.h>
+#include <sys/types.h>
+#include <unistd.h>
 #endif
 
 QT_BEGIN_NAMESPACE

@@ -34,7 +34,16 @@
 #include "cglconvenience_p.h"
 #include <QtCore/qglobal.h>
 #include <QtCore/private/qcore_mac_p.h>
+#if defined (slots)
+#pragma push_macro("slots")
+#undef slots
+#define SLOTS_REVERT
+#endif
 #include <Cocoa/Cocoa.h>
+#if defined (SLOTS_REVERT)
+#pragma pop_macro("slots")
+#undef SLOTS_REVERT
+#endif
 #include <QVector>
 
 void (*qcgl_getProcAddress(const QByteArray &procName))()
