@@ -35,8 +35,11 @@
 
 #ifndef QT_NO_NETWORKPROXY
 
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_6)
 #include <CFNetwork/CFNetwork.h>
+#endif
 #include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
 #include <SystemConfiguration/SystemConfiguration.h>
 
 #include <QtCore/QRegExp>

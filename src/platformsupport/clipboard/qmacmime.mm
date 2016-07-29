@@ -35,7 +35,16 @@
 #if defined(Q_OS_IOS)
 #import <UIKit/UIKit.h>
 #elif defined(Q_OS_OSX)
+#if defined (slots)
+#pragma push_macro("slots")
+#undef slots
+#define SLOTS_REVERT
+#endif
 #import <Cocoa/Cocoa.h>
+#if defined (SLOTS_REVERT)
+#pragma pop_macro("slots")
+#undef SLOTS_REVERT
+#endif
 #endif
 
 #include "qmacmime_p.h"

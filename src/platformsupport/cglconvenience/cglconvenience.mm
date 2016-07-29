@@ -34,7 +34,16 @@
 #include "cglconvenience_p.h"
 #include <QtCore/qglobal.h>
 #include <QtCore/private/qcore_mac_p.h>
+#if defined (slots)
+#pragma push_macro("slots")
+#undef slots
+#define SLOTS_REVERT
+#endif
 #include <Cocoa/Cocoa.h>
+#if defined (SLOTS_REVERT)
+#pragma pop_macro("slots")
+#undef SLOTS_REVERT
+#endif
 #include <QVector>
 
 void (*qcgl_getProcAddress(const QByteArray &procName))()
@@ -84,8 +93,11 @@ void *qcgl_createNSOpenGLPixelFormat(const QSurfaceFormat &format)
     if (format.swapBehavior() == QSurfaceFormat::DoubleBuffer
         || format.swapBehavior() == QSurfaceFormat::DefaultSwapBehavior)
         attrs.append(NSOpenGLPFADoubleBuffer);
-    else if (format.swapBehavior() == QSurfaceFormat::TripleBuffer)
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+    else if (format.swapBehavior() == QSurfaceFormat::TripleBuffer
+                 && QSysInfo::MacintoshVersion >= QSysInfo::MV_10_7)
         attrs.append(NSOpenGLPFATripleBuffer);
+#endif
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
     if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_7) {
