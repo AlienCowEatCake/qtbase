@@ -307,7 +307,10 @@ void QCocoaGLContext::updateSurfaceFormat()
     int doubleBuffered = -1;
     int tripleBuffered = -1;
     [pixelFormat getValues:&doubleBuffered forAttribute:NSOpenGLPFADoubleBuffer forVirtualScreen:0];
-    [pixelFormat getValues:&tripleBuffered forAttribute:NSOpenGLPFATripleBuffer forVirtualScreen:0];
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+    if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_7)
+        [pixelFormat getValues:&tripleBuffered forAttribute:NSOpenGLPFATripleBuffer forVirtualScreen:0];
+#endif
 
     if (tripleBuffered == 1)
         m_format.setSwapBehavior(QSurfaceFormat::TripleBuffer);

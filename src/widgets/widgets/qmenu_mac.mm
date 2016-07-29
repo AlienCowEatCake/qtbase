@@ -32,7 +32,16 @@
 ****************************************************************************/
 
 #import <Foundation/Foundation.h>
+#if defined (slots)
+#pragma push_macro("slots")
+#undef slots
+#define SLOTS_REVERT
+#endif
 #import <Cocoa/Cocoa.h>
+#if defined (SLOTS_REVERT)
+#pragma pop_macro("slots")
+#undef SLOTS_REVERT
+#endif
 
 #include "qmenu.h"
 #include "qmenubar.h"

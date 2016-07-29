@@ -292,7 +292,7 @@ static bool isMouseEvent(NSEvent *ev)
 + (void)applicationActivationChanged:(NSNotification*)notification
 {
     const id sender = self;
-    NSEnumerator *windowEnumerator = nullptr;
+    NSEnumerator *windowEnumerator = nil;
     NSApplication *application = [NSApplication sharedApplication];
 
 #if QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)

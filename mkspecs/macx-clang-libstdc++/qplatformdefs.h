@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the QtTest module of the Qt Toolkit.
+** This file is part of the qmake spec of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
@@ -31,32 +31,5 @@
 **
 ****************************************************************************/
 
-#include "qtestutil_macos_p.h"
+#include "../common/mac/qplatformdefs.h"
 
-#if defined (slots)
-#pragma push_macro("slots")
-#undef slots
-#define SLOTS_REVERT
-#endif
-#import <AppKit/AppKit.h>
-#if defined (SLOTS_REVERT)
-#pragma pop_macro("slots")
-#undef SLOTS_REVERT
-#endif
-
-QT_BEGIN_NAMESPACE
-
-namespace QTestPrivate {
-
-    /*! \internal
-
-        Disables restoration of previously saved window state. This causes tests
-        to start with a clean slate and prevents the "previous restore failed"
-        dialog from showing if there was a test crash.
-    */
-    void disableWindowRestore() {
-        [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"ApplePersistenceIgnoreState"];
-    }
-}
-
-QT_END_NAMESPACE
