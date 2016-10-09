@@ -138,9 +138,16 @@ void QCocoaScreen::updateGeometry()
 
 qreal QCocoaScreen::devicePixelRatio() const
 {
-    QMacAutoReleasePool pool;
-    NSScreen * screen = osScreen();
-    return qreal(screen ? [screen backingScaleFactor] : 1.0);
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+    if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_7) {
+        QMacAutoReleasePool pool;
+        NSScreen * screen = osScreen();
+        return qreal(screen ? [screen backingScaleFactor] : 1.0);
+    } else
+#endif
+    {
+        return 1.0;
+    }
 }
 
 QPlatformScreen::SubpixelAntialiasingType QCocoaScreen::subpixelAntialiasingTypeHint() const

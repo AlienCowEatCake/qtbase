@@ -157,7 +157,6 @@ static bool _q_dontOverrideCtrlLMB = false;
         m_inputSource = 0;
         m_mouseMoveHelper = [[QT_MANGLE_NAMESPACE(QNSViewMouseMoveHelper) alloc] initWithView:self];
         m_resendKeyEvent = false;
-        m_scrolling = false;
         m_updatingDrag = false;
         m_currentlyInterpretedKeyEvent = 0;
 
@@ -437,6 +436,10 @@ static bool _q_dontOverrideCtrlLMB = false;
         Qt::WindowState newState = notificationName == NSWindowDidMiniaturizeNotification ?
                     Qt::WindowMinimized : Qt::WindowNoState;
         [self notifyWindowStateChanged:newState];
+        // NSWindowDidOrderOnScreenAndFinishAnimatingNotification is private API, and not
+        // emitted in 10.6, so we bring back the old behavior for that case alone.
+        if (newState == Qt::WindowNoState && QSysInfo::QSysInfo::MacintoshVersion == QSysInfo::MV_10_6)
+            m_platformWindow->exposeWindow();
     } else if ([notificationName isEqualToString: @"NSWindowDidOrderOffScreenNotification"]) {
         m_platformWindow->obscureWindow();
     } else if ([notificationName isEqualToString: @"NSWindowDidOrderOnScreenAndFinishAnimatingNotification"]) {
@@ -474,11 +477,19 @@ QT_WARNING_POP
                 m_platformWindow->updateExposedGeometry();
             }
         }
-    } else if (notificationName == NSWindowDidEnterFullScreenNotification
-               || notificationName == NSWindowDidExitFullScreenNotification) {
-        Qt::WindowState newState = notificationName == NSWindowDidEnterFullScreenNotification ?
-                                   Qt::WindowFullScreen : Qt::WindowNoState;
-        [self notifyWindowStateChanged:newState];
+    } else {
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+    if (QSysInfo::QSysInfo::MacintoshVersion >= QSysInfo::MV_10_7) {
+        if (notificationName == NSWindowDidEnterFullScreenNotification
+            || notificationName == NSWindowDidExitFullScreenNotification) {
+            Qt::WindowState newState = notificationName == NSWindowDidEnterFullScreenNotification ?
+                        Qt::WindowFullScreen : Qt::WindowNoState;
+            [self notifyWindowStateChanged:newState];
+        }
+    }
+#endif
+
     }
 }
 
@@ -710,8 +721,16 @@ QT_WARNING_POP
 
     NSWindow *window = [self window];
     NSPoint nsWindowPoint;
-    NSRect windowRect = [window convertRectFromScreen:NSMakeRect(mouseLocation.x, mouseLocation.y, 1, 1)];
-    nsWindowPoint = windowRect.origin;                    // NSWindow coordinates
+    // Use convertRectToScreen if available (added in 10.7).
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+    if ([window respondsToSelector:@selector(convertRectFromScreen:)]) {
+        NSRect windowRect = [window convertRectFromScreen:NSMakeRect(mouseLocation.x, mouseLocation.y, 1, 1)];
+        nsWindowPoint = windowRect.origin;                    // NSWindow coordinates
+    } else
+#endif
+    {
+        nsWindowPoint = [window convertScreenToBase:mouseLocation];                    // NSWindow coordinates
+    }
     NSPoint nsViewPoint = [self convertPoint: nsWindowPoint fromView: nil]; // NSView/QWindow coordinates
     *qtWindowPoint = QPointF(nsViewPoint.x, nsViewPoint.y);                     // NSView/QWindow coordinates
 
@@ -729,8 +748,7 @@ QT_WARNING_POP
     NSPoint screenPoint;
     if (theEvent) {
         NSPoint windowPoint = [theEvent locationInWindow];
-        NSRect screenRect = [[theEvent window] convertRectToScreen:NSMakeRect(windowPoint.x, windowPoint.y, 1, 1)];
-        screenPoint = screenRect.origin;
+        screenPoint = [[theEvent window] convertBaseToScreen:windowPoint];
     } else {
         screenPoint = [NSEvent mouseLocation];
     }
@@ -790,12 +808,6 @@ QT_WARNING_POP
     case NSRightMouseDown:
         m_frameStrutButtons |= Qt::RightButton;
         break;
-    case NSLeftMouseDragged:
-        m_frameStrutButtons |= Qt::LeftButton;
-        break;
-    case NSRightMouseDragged:
-        m_frameStrutButtons |= Qt::RightButton;
-        break;
     case NSRightMouseUp:
         m_frameStrutButtons &= ~Qt::RightButton;
         break;
@@ -812,13 +824,12 @@ QT_WARNING_POP
     NSPoint windowPoint = [theEvent locationInWindow];
 
     int windowScreenY = [window frame].origin.y + [window frame].size.height;
-    NSPoint windowCoord = [self convertPoint:[self frame].origin toView:nil];
-    int viewScreenY = [window convertRectToScreen:NSMakeRect(windowCoord.x, windowCoord.y, 0, 0)].origin.y;
+    int viewScreenY = [window convertBaseToScreen:[self convertPoint:[self frame].origin toView:nil]].y;
     int titleBarHeight = windowScreenY - viewScreenY;
 
     NSPoint nsViewPoint = [self convertPoint: windowPoint fromView: nil];
     QPoint qtWindowPoint = QPoint(nsViewPoint.x, titleBarHeight + nsViewPoint.y);
-    NSPoint screenPoint = [window convertRectToScreen:NSMakeRect(windowPoint.x, windowPoint.y, 0, 0)].origin;
+    NSPoint screenPoint = [window convertBaseToScreen:windowPoint];
     QPoint qtScreenPoint = QPoint(screenPoint.x, qt_mac_flipYCoordinate(screenPoint.y));
 
     ulong timestamp = [theEvent timestamp] * 1000;
@@ -1366,82 +1377,101 @@ static QTabletEvent::TabletDevice wacomTabletDevice(NSEvent *theEvent)
 {
     if (m_window && (m_window->flags() & Qt::WindowTransparentForInput) )
         return [super scrollWheel:theEvent];
-
+    const EventRef carbonEvent = (EventRef)[theEvent eventRef];
+    const UInt32 carbonEventKind = carbonEvent ? ::GetEventKind(carbonEvent) : 0;
+    const bool scrollEvent = carbonEventKind == kEventMouseScroll;
+    
     QPoint angleDelta;
-    Qt::MouseEventSource source = Qt::MouseEventNotSynthesized;
-    if ([theEvent hasPreciseScrollingDeltas]) {
+    if (scrollEvent) {
         // The mouse device contains pixel scroll wheel support (Mighty Mouse, Trackpad).
         // Since deviceDelta is delivered as pixels rather than degrees, we need to
         // convert from pixels to degrees in a sensible manner.
         // It looks like 1/4 degrees per pixel behaves most native.
         // (NB: Qt expects the unit for delta to be 8 per degree):
         const int pixelsToDegrees = 2; // 8 * 1/4
-        angleDelta.setX([theEvent scrollingDeltaX] * pixelsToDegrees);
-        angleDelta.setY([theEvent scrollingDeltaY] * pixelsToDegrees);
-        source = Qt::MouseEventSynthesizedBySystem;
+        
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+        if ([theEvent respondsToSelector:@selector(scrollingDeltaX)]) {
+            angleDelta.setX([theEvent scrollingDeltaX] * pixelsToDegrees);
+            angleDelta.setY([theEvent scrollingDeltaY] * pixelsToDegrees);
+        } else
+#endif
+        {
+            angleDelta.setX([theEvent deviceDeltaX] * pixelsToDegrees);
+            angleDelta.setY([theEvent deviceDeltaY] * pixelsToDegrees);
+        }
+        
     } else {
+        // carbonEventKind == kEventMouseWheelMoved
         // Remove acceleration, and use either -120 or 120 as delta:
         angleDelta.setX(qBound(-120, int([theEvent deltaX] * 10000), 120));
         angleDelta.setY(qBound(-120, int([theEvent deltaY] * 10000), 120));
     }
 
     QPoint pixelDelta;
-    if ([theEvent hasPreciseScrollingDeltas]) {
-        pixelDelta.setX([theEvent scrollingDeltaX]);
-        pixelDelta.setY([theEvent scrollingDeltaY]);
-    } else {
-        // docs: "In the case of !hasPreciseScrollingDeltas, multiply the delta with the line width."
-        // scrollingDeltaX seems to return a minimum value of 0.1 in this case, map that to two pixels.
-        const CGFloat lineWithEstimate = 20.0;
-        pixelDelta.setX([theEvent scrollingDeltaX] * lineWithEstimate);
-        pixelDelta.setY([theEvent scrollingDeltaY] * lineWithEstimate);
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+    if ([theEvent respondsToSelector:@selector(scrollingDeltaX)]) {
+        if ([theEvent hasPreciseScrollingDeltas]) {
+            pixelDelta.setX([theEvent scrollingDeltaX]);
+            pixelDelta.setY([theEvent scrollingDeltaY]);
+        } else {
+            // docs: "In the case of !hasPreciseScrollingDeltas, multiply the delta with the line width."
+            // scrollingDeltaX seems to return a minimum value of 0.1 in this case, map that to two pixels.
+            const CGFloat lineWithEstimate = 20.0;
+            pixelDelta.setX([theEvent scrollingDeltaX] * lineWithEstimate);
+            pixelDelta.setY([theEvent scrollingDeltaY] * lineWithEstimate);
+        }
     }
-
+#endif
+    
     QPointF qt_windowPoint;
     QPointF qt_screenPoint;
     [self convertFromScreen:[NSEvent mouseLocation] toWindowPoint:&qt_windowPoint andScreenPoint:&qt_screenPoint];
     NSTimeInterval timestamp = [theEvent timestamp];
     ulong qt_timestamp = timestamp * 1000;
-
-    // Prevent keyboard modifier state from changing during scroll event streams.
-    // A two-finger trackpad flick generates a stream of scroll events. We want
-    // the keyboard modifier state to be the state at the beginning of the
-    // flick in order to avoid changing the interpretation of the events
-    // mid-stream. One example of this happening would be when pressing cmd
-    // after scrolling in Qt Creator: not taking the phase into account causes
-    // the end of the event stream to be interpreted as font size changes.
-    NSEventPhase momentumPhase = [theEvent momentumPhase];
-    if (momentumPhase == NSEventPhaseNone) {
-        currentWheelModifiers = [QNSView convertKeyModifiers:[theEvent modifierFlags]];
-    }
-
-    NSEventPhase phase = [theEvent phase];
-    Qt::ScrollPhase ph = Qt::ScrollUpdate;
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_8
-    if (QSysInfo::QSysInfo::MacintoshVersion >= QSysInfo::MV_10_8) {
-        // On 10.8 and above, MayBegin is likely to happen.  We treat it the same as an actual begin.
-        if (phase == NSEventPhaseMayBegin) {
-            m_scrolling = true;
-            ph = Qt::ScrollBegin;
+    
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+    if ([theEvent respondsToSelector:@selector(scrollingDeltaX)]) {
+        // Prevent keyboard modifier state from changing during scroll event streams.
+        // A two-finger trackpad flick generates a stream of scroll events. We want
+        // the keyboard modifier state to be the state at the beginning of the
+        // flick in order to avoid changing the interpretation of the events
+        // mid-stream. One example of this happening would be when pressing cmd
+        // after scrolling in Qt Creator: not taking the phase into account causes
+        // the end of the event stream to be interpreted as font size changes.
+        NSEventPhase momentumPhase = [theEvent momentumPhase];
+        if (momentumPhase == NSEventPhaseNone) {
+            currentWheelModifiers = [QNSView convertKeyModifiers:[theEvent modifierFlags]];
         }
-    }
+        
+        NSEventPhase phase = [theEvent phase];
+        Qt::ScrollPhase ph = Qt::ScrollUpdate;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_8
+        if (QSysInfo::QSysInfo::MacintoshVersion >= QSysInfo::MV_10_8) {
+            // On 10.8 and above, MayBegin is likely to happen.  We treat it the same as an actual begin.
+            if (phase == NSEventPhaseMayBegin)
+                ph = Qt::ScrollBegin;
+        } else
 #endif
-    if (phase == NSEventPhaseBegan) {
-        // If MayBegin did not happen, Began is the actual beginning.
-        if (!m_scrolling)
-            ph = Qt::ScrollBegin;
-        m_scrolling = true;
-    } else if (phase == NSEventPhaseEnded || phase == NSEventPhaseCancelled ||
-               momentumPhase == NSEventPhaseEnded || momentumPhase == NSEventPhaseCancelled) {
-        ph = Qt::ScrollEnd;
-        m_scrolling = false;
-    } else if (phase == NSEventPhaseNone && momentumPhase == NSEventPhaseNone) {
-        ph = Qt::NoScrollPhase;
-        if (!QGuiApplicationPrivate::scrollNoPhaseAllowed)
-            ph = Qt::ScrollUpdate;
+            if (phase == NSEventPhaseBegan) {
+                // On 10.7, MayBegin will not happen, so Began is the actual beginning.
+                ph = Qt::ScrollBegin;
+            }
+        if (phase == NSEventPhaseEnded || phase == NSEventPhaseCancelled) {
+            ph = Qt::ScrollEnd;
+        }
+        
+        QWindowSystemInterface::handleWheelEvent(m_window, qt_timestamp, qt_windowPoint, qt_screenPoint, pixelDelta, angleDelta, currentWheelModifiers, ph);
+        
+        if (momentumPhase == NSEventPhaseEnded || momentumPhase == NSEventPhaseCancelled || momentumPhase == NSEventPhaseNone) {
+            currentWheelModifiers = Qt::NoModifier;
+        }
+    } else
+#endif
+    {
+        QWindowSystemInterface::handleWheelEvent(m_window, qt_timestamp, qt_windowPoint, qt_screenPoint, pixelDelta, angleDelta,
+                                                 [QNSView convertKeyModifiers:[theEvent modifierFlags]]);
     }
-
-    QWindowSystemInterface::handleWheelEvent(m_window, qt_timestamp, qt_windowPoint, qt_screenPoint, pixelDelta, angleDelta, currentWheelModifiers, ph, source);
 }
 #endif //QT_NO_WHEELEVENT
 
@@ -1900,18 +1930,15 @@ static QPoint mapWindowCoordinates(QWindow *source, QWindow *target, QPoint poin
     return target->mapFromGlobal(source->mapToGlobal(point));
 }
 
-- (NSDragOperation)draggingSession:(NSDraggingSession *)session
-  sourceOperationMaskForDraggingContext:(NSDraggingContext)context
+- (NSDragOperation) draggingSourceOperationMaskForLocal:(BOOL)isLocal
 {
-    Q_UNUSED(session);
-    Q_UNUSED(context);
+    Q_UNUSED(isLocal);
     QCocoaDrag* nativeDrag = QCocoaIntegration::instance()->drag();
     return qt_mac_mapDropActions(nativeDrag->currentDrag()->supportedActions());
 }
 
-- (BOOL)ignoreModifierKeysForDraggingSession:(NSDraggingSession *)session
+- (BOOL) ignoreModifierKeysWhileDragging
 {
-    Q_UNUSED(session);
     // According to the "Dragging Sources" chapter on Cocoa DnD Programming
     // (https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/DragandDrop/Concepts/dragsource.html),
     // if the control, option, or command key is pressed, the source’s
@@ -2065,27 +2092,27 @@ static QPoint mapWindowCoordinates(QWindow *source, QWindow *target, QPoint poin
     return response.isAccepted();
 }
 
-- (void)draggingSession:(NSDraggingSession *)session
-           endedAtPoint:(NSPoint)screenPoint
-              operation:(NSDragOperation)operation
+- (void)draggedImage:(NSImage*) img endedAt:(NSPoint) point operation:(NSDragOperation) operation
 {
-    Q_UNUSED(session);
+    Q_UNUSED(img);
     Q_UNUSED(operation);
     QWindow *target = findEventTargetWindow(m_window);
     if (!target)
         return;
 
-    // keep our state, and QGuiApplication state (buttons member) in-sync,
-    // or future mouse events will be processed incorrectly
+// keep our state, and QGuiApplication state (buttons member) in-sync,
+// or future mouse events will be processed incorrectly
     NSUInteger pmb = [NSEvent pressedMouseButtons];
     for (int buttonNumber = 0; buttonNumber < 32; buttonNumber++) { // see cocoaButton2QtButton() for the 32 value
         if (!(pmb & (1 << buttonNumber)))
             m_buttons &= ~cocoaButton2QtButton(buttonNumber);
     }
 
-    NSPoint windowPoint = [self.window convertRectFromScreen:NSMakeRect(screenPoint.x, screenPoint.y, 1, 1)].origin;
+    NSPoint windowPoint = [self convertPoint: point fromView: nil];
     QPoint qtWindowPoint(windowPoint.x, windowPoint.y);
 
+    NSWindow *window = [self window];
+    NSPoint screenPoint = [window convertBaseToScreen :point];
     QPoint qtScreenPoint = QPoint(screenPoint.x, qt_mac_flipYCoordinate(screenPoint.y));
 
     QWindowSystemInterface::handleMouseEvent(target, mapWindowCoordinates(m_window, target, qtWindowPoint), qtScreenPoint, m_buttons);

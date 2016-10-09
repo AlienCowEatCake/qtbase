@@ -74,7 +74,6 @@ Q_FORWARD_DECLARE_OBJC_CLASS(QT_MANGLE_NAMESPACE(QNSViewMouseMoveHelper));
     NSString *m_inputSource;
     QT_MANGLE_NAMESPACE(QNSViewMouseMoveHelper) *m_mouseMoveHelper;
     bool m_resendKeyEvent;
-    bool m_scrolling;
     bool m_updatingDrag;
     bool m_exposedOnMoveToWindow;
     NSEvent *m_currentlyInterpretedKeyEvent;

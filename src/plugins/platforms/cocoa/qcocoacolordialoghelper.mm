@@ -99,7 +99,10 @@ QT_NAMESPACE_ALIAS_OBJC_CLASS(QNSColorPanelDelegate);
     mResultSet = false;
     mClosingDueToKnownButton = false;
 
-    [mColorPanel setRestorable:NO];
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+    if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_7)
+        [mColorPanel setRestorable:NO];
+#endif
 
     [[NSNotificationCenter defaultCenter] addObserver:self
         selector:@selector(colorChanged:)
