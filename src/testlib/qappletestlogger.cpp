@@ -52,7 +52,10 @@ bool QAppleTestLogger::debugLoggingEnabled()
     // Debug-level messages are only captured in memory when debug logging is
     // enabled through a configuration change, which can happen automatically
     // when running inside Xcode, or with the Console application open.
-    return os_log_type_enabled(OS_LOG_DEFAULT, OS_LOG_TYPE_DEBUG);
+    if (__builtin_available(macOS 10.12, iOS 10, tvOS 10, watchOS 3, *))
+        return os_log_type_enabled(OS_LOG_DEFAULT, OS_LOG_TYPE_DEBUG);
+
+    return false;
 }
 
 QAppleTestLogger::QAppleTestLogger()
@@ -69,13 +72,15 @@ void QAppleTestLogger::enterTestFunction(const char *function)
     // Re-create activity each time
     testFunctionActivity = QT_APPLE_LOG_ACTIVITY("Running test function").enter();
 
-    QTestCharBuffer testIdentifier;
-    QTestPrivate::generateTestIdentifier(&testIdentifier);
-    QString identifier = QString::fromLatin1(testIdentifier.data());
-    QMessageLogContext context(nullptr, 0, nullptr, "qt.test.enter");
-    QString message = identifier;
+    if (__builtin_available(macOS 10.12, iOS 10, tvOS 10, watchOS 3, *)) {
+        QTestCharBuffer testIdentifier;
+        QTestPrivate::generateTestIdentifier(&testIdentifier);
+        QString identifier = QString::fromLatin1(testIdentifier.data());
+        QMessageLogContext context(nullptr, 0, nullptr, "qt.test.enter");
+        QString message = identifier;
 
-    AppleUnifiedLogger::messageHandler(QtDebugMsg, context, message, identifier);
+        AppleUnifiedLogger::messageHandler(QtDebugMsg, context, message, identifier);
+    }
 }
 
 void QAppleTestLogger::leaveTestFunction()
@@ -101,81 +106,87 @@ struct MessageData
 void QAppleTestLogger::addIncident(IncidentTypes type, const char *description,
                                    const char *file, int line)
 {
-    MessageData messageData = [=]() {
-        switch (type) {
-        case QAbstractTestLogger::Pass:
-            return MessageData{QtInfoMsg, "pass"};
-        case QAbstractTestLogger::XFail:
-            return MessageData{QtInfoMsg, "xfail"};
-        case QAbstractTestLogger::Fail:
-            return MessageData{QtCriticalMsg, "fail"};
-        case QAbstractTestLogger::XPass:
-            return MessageData{QtInfoMsg, "xpass"};
-        case QAbstractTestLogger::BlacklistedPass:
-            return MessageData{QtWarningMsg, "bpass"};
-        case QAbstractTestLogger::BlacklistedFail:
-            return MessageData{QtInfoMsg, "bfail"};
-        case QAbstractTestLogger::BlacklistedXPass:
-            return MessageData{QtWarningMsg, "bxpass"};
-        case QAbstractTestLogger::BlacklistedXFail:
-            return MessageData{QtInfoMsg, "bxfail"};
-        }
-        Q_UNREACHABLE();
-    }();
+    if (__builtin_available(macOS 10.12, iOS 10, tvOS 10, watchOS 3, *)) {
+        MessageData messageData = [=]() {
+            switch (type) {
+            case QAbstractTestLogger::Pass:
+                return MessageData{QtInfoMsg, "pass"};
+            case QAbstractTestLogger::XFail:
+                return MessageData{QtInfoMsg, "xfail"};
+            case QAbstractTestLogger::Fail:
+                return MessageData{QtCriticalMsg, "fail"};
+            case QAbstractTestLogger::XPass:
+                return MessageData{QtInfoMsg, "xpass"};
+            case QAbstractTestLogger::BlacklistedPass:
+                return MessageData{QtWarningMsg, "bpass"};
+            case QAbstractTestLogger::BlacklistedFail:
+                return MessageData{QtInfoMsg, "bfail"};
+            case QAbstractTestLogger::BlacklistedXPass:
+                return MessageData{QtWarningMsg, "bxpass"};
+            case QAbstractTestLogger::BlacklistedXFail:
+                return MessageData{QtInfoMsg, "bxfail"};
+            }
+            Q_UNREACHABLE();
+        }();
 
-    QTestCharBuffer category;
-    messageData.generateCategory(&category);
+        QTestCharBuffer category;
+        messageData.generateCategory(&category);
 
-    QMessageLogContext context(file, line, /* function = */ nullptr, category.data());
+        QMessageLogContext context(file, line, /* function = */ nullptr, category.data());
 
-    QString message = testIdentifier();
-    if (qstrlen(description))
-        message += QLatin1Char('\n') % QString::fromLatin1(description);
+        QString message = testIdentifier();
+        if (qstrlen(description))
+            message += QLatin1Char('\n') % QString::fromLatin1(description);
 
-    AppleUnifiedLogger::messageHandler(messageData.messageType, context, message, subsystem());
+        AppleUnifiedLogger::messageHandler(messageData.messageType, context, message, subsystem());
+    }
 }
 
 void QAppleTestLogger::addMessage(QtMsgType type, const QMessageLogContext &context, const QString &message)
 {
-    AppleUnifiedLogger::messageHandler(type, context, message);
+    if (__builtin_available(macOS 10.12, iOS 10, tvOS 10, watchOS 3, *)) {
+        AppleUnifiedLogger::messageHandler(type, context, message);
+    }
 }
 
 void QAppleTestLogger::addMessage(MessageTypes type, const QString &message, const char *file, int line)
 {
-    MessageData messageData = [=]() {
-        switch (type) {
-        case QAbstractTestLogger::Warn:
-        case QAbstractTestLogger::QWarning:
-            return MessageData{QtWarningMsg, nullptr};
-        case QAbstractTestLogger::QDebug:
-            return MessageData{QtDebugMsg, nullptr};
-        case QAbstractTestLogger::QSystem:
-            return MessageData{QtWarningMsg, "system"};
-        case QAbstractTestLogger::QFatal:
-            return MessageData{QtFatalMsg, nullptr};
-        case QAbstractTestLogger::Skip:
-            return MessageData{QtInfoMsg, "skip"};
-        case QAbstractTestLogger::Info:
-        case QAbstractTestLogger::QInfo:
-            return MessageData{QtInfoMsg, nullptr};
+    if (__builtin_available(macOS 10.12, iOS 10, tvOS 10, watchOS 3, *)) {
+        MessageData messageData = [=]() {
+            switch (type) {
+            case QAbstractTestLogger::Warn:
+            case QAbstractTestLogger::QWarning:
+                return MessageData{QtWarningMsg, nullptr};
+            case QAbstractTestLogger::QDebug:
+                return MessageData{QtDebugMsg, nullptr};
+            case QAbstractTestLogger::QSystem:
+                return MessageData{QtWarningMsg, "system"};
+            case QAbstractTestLogger::QFatal:
+                return MessageData{QtFatalMsg, nullptr};
+            case QAbstractTestLogger::Skip:
+                return MessageData{QtInfoMsg, "skip"};
+            case QAbstractTestLogger::Info:
+            case QAbstractTestLogger::QInfo:
+                return MessageData{QtInfoMsg, nullptr};
+            }
+            Q_UNREACHABLE();
+        }();
+
+        QTestCharBuffer category;
+        messageData.generateCategory(&category);
+
+        QMessageLogContext context(file, line, /* function = */ nullptr, category.data());
+        QString msg = message;
+
+        if (type == Skip) {
+            if (!message.isNull())
+                msg.prepend(testIdentifier() + QLatin1Char('\n'));
+            else
+                msg = testIdentifier();
         }
-        Q_UNREACHABLE();
-    }();
 
-    QTestCharBuffer category;
-    messageData.generateCategory(&category);
-
-    QMessageLogContext context(file, line, /* function = */ nullptr, category.data());
-    QString msg = message;
-
-    if (type == Skip) {
-        if (!message.isNull())
-            msg.prepend(testIdentifier() + QLatin1Char('\n'));
-        else
-            msg = testIdentifier();
+        AppleUnifiedLogger::messageHandler(messageData.messageType, context, msg, subsystem());
     }
-
-    AppleUnifiedLogger::messageHandler(messageData.messageType, context, msg, subsystem());
 }
 
 QString QAppleTestLogger::subsystem() const
