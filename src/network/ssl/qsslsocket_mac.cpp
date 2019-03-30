@@ -506,8 +506,10 @@ QSsl::SslProtocol QSslSocketBackendPrivate::sessionProtocol() const
         return QSsl::TlsV1_1;
     case kTLSProtocol12:
         return QSsl::TlsV1_2;
+#if QT_DARWIN_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13, __IPHONE_11_0, __TVOS_11_0, __WATCHOS_4_0)
     case kTLSProtocol13:
         return QSsl::TlsV1_3;
+#endif
     default:
         return QSsl::UnknownProtocol;
     }
