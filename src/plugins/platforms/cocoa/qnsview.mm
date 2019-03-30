@@ -72,7 +72,7 @@
 @property (assign) NSWindow* previousWindow;
 @end
 
-@interface QT_MANGLE_NAMESPACE(QNSView) (Drawing) <CALayerDelegate>
+@interface QT_MANGLE_NAMESPACE(QNSView) (Drawing)
 - (void)initDrawing;
 @end
 

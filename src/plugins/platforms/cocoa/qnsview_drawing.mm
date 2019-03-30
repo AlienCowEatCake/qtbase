@@ -177,14 +177,17 @@
         [self updateMetalLayerDrawableSize:static_cast<CAMetalLayer* >(layer)];
 }
 
-- (void)displayLayer:(CALayer *)layer
+- (BOOL)wantsUpdateLayer
 {
-    Q_ASSERT(layer == self.layer);
+    return YES;
+}
 
+- (void)updateLayer
+{
     if (!m_platformWindow)
         return;
 
-    qCDebug(lcQpaDrawing) << "[QNSView displayLayer]" << m_platformWindow->window();
+    qCDebug(lcQpaDrawing) << "[QNSView updateLayer]" << m_platformWindow->window();
 
     // FIXME: Find out if there's a way to resolve the dirty rect like in drawRect:
     m_platformWindow->handleExposeEvent(QRectF::fromCGRect(self.bounds).toRect());
