@@ -134,6 +134,11 @@ void QNSWindowBackingStore::resize(const QSize &size, const QRegion &staticConte
         cocoaWindow->m_needsInvalidateShadow = true;
 }
 
+#if !QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
+static const NSCompositingOperation NSCompositingOperationCopy = NSCompositeCopy;
+static const NSCompositingOperation NSCompositingOperationSourceOver = NSCompositeSourceOver;
+#endif
+
 /*!
     Flushes the given \a region from the specified \a window onto the
     screen.
