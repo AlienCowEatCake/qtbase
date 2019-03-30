@@ -158,7 +158,11 @@ QT_NAMESPACE_ALIAS_OBJC_CLASS(QNSOpenSavePanelDelegate);
     // resetting our mCurrentDir, set the delegate
     // here to make sure it gets the correct value.
     [mSavePanel setDelegate:self];
-    mOpenPanel.accessoryViewDisclosed = YES;
+
+#if QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_11)
+    if (__builtin_available(macOS 10.11, *))
+        mOpenPanel.accessoryViewDisclosed = YES;
+#endif
 
     if (mOptions->isLabelExplicitlySet(QFileDialogOptions::Accept))
         [mSavePanel setPrompt:[self strip:options->labelText(QFileDialogOptions::Accept)]];
