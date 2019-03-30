@@ -268,11 +268,13 @@ QT_USE_NAMESPACE
     inLaunch = false;
 
     if (qEnvironmentVariableIsEmpty("QT_MAC_DISABLE_FOREGROUND_APPLICATION_TRANSFORM")) {
-        // Move the application window to front to avoid launching behind the terminal.
-        // Ignoring other apps is necessary (we must ignore the terminal), but makes
-        // Qt apps play slightly less nice with other apps when lanching from Finder
-        // (See the activateIgnoringOtherApps docs.)
-        [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
+        if (__builtin_available(macOS 10.12, *)) {
+            // Move the application window to front to avoid launching behind the terminal.
+            // Ignoring other apps is necessary (we must ignore the terminal), but makes
+            // Qt apps play slightly less nice with other apps when lanching from Finder
+            // (See the activateIgnoringOtherApps docs.)
+            [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
+        }
     }
 }
 

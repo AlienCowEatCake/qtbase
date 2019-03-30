@@ -76,7 +76,9 @@
 #endif
 
 #if defined(Q_OS_DARWIN)
-# include <sys/clonefile.h>
+# if QT_DARWIN_PLATFORM_SDK_EQUAL_OR_ABOVE(101200, 100000, 100000, 30000)
+#  include <sys/clonefile.h>
+# endif
 # include <copyfile.h>
 // We cannot include <Foundation/Foundation.h> (it's an Objective-C header), but
 // we need these declarations:
@@ -1226,18 +1228,20 @@ bool QFileSystemEngine::createLink(const QFileSystemEntry &source, const QFileSy
 //static
 bool QFileSystemEngine::copyFile(const QFileSystemEntry &source, const QFileSystemEntry &target, QSystemError &error)
 {
-#if defined(Q_OS_DARWIN)
-    if (::clonefile(source.nativeFilePath().constData(),
-                    target.nativeFilePath().constData(), 0) == 0)
-        return true;
-    error = QSystemError(errno, QSystemError::StandardLibraryError);
-    return false;
+#if QT_DARWIN_PLATFORM_SDK_EQUAL_OR_ABOVE(101200, 100000, 100000, 30000)
+    if (__builtin_available(macOS 10.12, iOS 10, tvOS 10, watchOS 3, *)) {
+        if (::clonefile(source.nativeFilePath().constData(),
+                        target.nativeFilePath().constData(), 0) == 0)
+            return true;
+        error = QSystemError(errno, QSystemError::StandardLibraryError);
+        return false;
+    }
 #else
     Q_UNUSED(source);
     Q_UNUSED(target);
+#endif
     error = QSystemError(ENOSYS, QSystemError::StandardLibraryError); //Function not implemented
     return false;
-#endif
 }
 
 //static
@@ -1259,11 +1263,13 @@ bool QFileSystemEngine::renameFile(const QFileSystemEntry &source, const QFileSy
     }
 #endif
 #if defined(Q_OS_DARWIN) && defined(RENAME_EXCL)
-    if (renameatx_np(AT_FDCWD, srcPath, AT_FDCWD, tgtPath, RENAME_EXCL) == 0)
-        return true;
-    if (errno != ENOTSUP) {
-        error = QSystemError(errno, QSystemError::StandardLibraryError);
-        return false;
+    if (__builtin_available(macOS 10.12, iOS 10, tvOS 10, watchOS 3, *)) {
+        if (renameatx_np(AT_FDCWD, srcPath, AT_FDCWD, tgtPath, RENAME_EXCL) == 0)
+            return true;
+        if (errno != ENOTSUP) {
+            error = QSystemError(errno, QSystemError::StandardLibraryError);
+            return false;
+        }
     }
 #endif
 
