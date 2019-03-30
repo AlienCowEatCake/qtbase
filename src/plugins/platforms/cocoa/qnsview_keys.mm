@@ -53,7 +53,7 @@
         qtMods |= Qt::AltModifier;
     if (modifierFlags & NSEventModifierFlagCommand)
         qtMods |= dontSwapCtrlAndMeta ? Qt::MetaModifier : Qt::ControlModifier;
-    if (modifierFlags & NSEventModifierFlagNumericPad)
+    if (modifierFlags & NSEventModifierFlagCommand)
         qtMods |= Qt::KeypadModifier;
     return qtMods;
 }
