@@ -338,9 +338,9 @@ void QCocoaWindow::setVisible(bool visible)
                 // Since this isn't a native popup, the window manager doesn't close the popup when you click outside
                 NSWindow *nativeParentWindow = parentCocoaWindow->nativeWindow();
                 NSUInteger parentStyleMask = nativeParentWindow.styleMask;
-                if ((m_resizableTransientParent = (parentStyleMask & NSWindowStyleMaskResizable))
-                    && !(nativeParentWindow.styleMask & NSWindowStyleMaskFullScreen))
-                    nativeParentWindow.styleMask &= ~NSWindowStyleMaskResizable;
+                if ((m_resizableTransientParent = (parentStyleMask & NSResizableWindowMask))
+                    && !(nativeParentWindow.styleMask & NSFullScreenWindowMask))
+                    nativeParentWindow.styleMask &= ~NSResizableWindowMask;
             }
 
         }
@@ -368,8 +368,8 @@ void QCocoaWindow::setVisible(bool visible)
                 // Close popup when clicking outside it
                 if (window()->type() == Qt::Popup && !(parentCocoaWindow && window()->transientParent()->isActive())) {
                     removeMonitor();
-                    NSEventMask eventMask = NSEventMaskLeftMouseDown | NSEventMaskRightMouseDown
-                                          | NSEventMaskOtherMouseDown | NSEventMaskMouseMoved;
+                    NSEventMask eventMask = NSLeftMouseDownMask | NSRightMouseDownMask
+                                          | NSOtherMouseDownMask | NSMouseMovedMask;
                     monitor = [NSEvent addGlobalMonitorForEventsMatchingMask:eventMask handler:^(NSEvent *e) {
                         const auto button = cocoaButton2QtButton(e);
                         const auto buttons = currentlyPressedMouseButtons();
@@ -428,9 +428,9 @@ void QCocoaWindow::setVisible(bool visible)
         if (parentCocoaWindow && window()->type() == Qt::Popup) {
             NSWindow *nativeParentWindow = parentCocoaWindow->nativeWindow();
             if (m_resizableTransientParent
-                && !(nativeParentWindow.styleMask & NSWindowStyleMaskFullScreen))
+                && !(nativeParentWindow.styleMask & NSFullScreenWindowMask))
                 // A window should not be resizable while a transient popup is open
-                nativeParentWindow.styleMask |= NSWindowStyleMaskResizable;
+                nativeParentWindow.styleMask |= NSResizableWindowMask;
         }
     }
 }
@@ -471,39 +471,39 @@ NSUInteger QCocoaWindow::windowStyleMask(Qt::WindowFlags flags)
     const bool frameless = (flags & Qt::FramelessWindowHint) || windowIsPopupType(type);
 
     // Remove zoom button by disabling resize for CustomizeWindowHint windows, except for
-    // Qt::Tool windows (e.g. dock windows) which should always be resizable.
-    const bool resizable = !(flags & Qt::CustomizeWindowHint) || (type == Qt::Tool);
+    // Qt::Tool windows (e.g. dock windows) which should always be resizeable.
+    const bool resizeable = !(flags & Qt::CustomizeWindowHint) || (type == Qt::Tool);
 
     // Select base window type. Note that the value of NSBorderlessWindowMask is 0.
-    NSUInteger styleMask = (frameless || !resizable) ? NSWindowStyleMaskBorderless : NSWindowStyleMaskResizable;
+    NSUInteger styleMask = (frameless || !resizeable) ? NSBorderlessWindowMask : NSResizableWindowMask;
 
     if (frameless) {
         // No further customizations for frameless since there are no window decorations.
     } else if (flags & Qt::CustomizeWindowHint) {
         if (flags & Qt::WindowTitleHint)
-            styleMask |= NSWindowStyleMaskTitled;
+            styleMask |= NSTitledWindowMask;
         if (flags & Qt::WindowCloseButtonHint)
-            styleMask |= NSWindowStyleMaskClosable;
+            styleMask |= NSClosableWindowMask;
         if (flags & Qt::WindowMinimizeButtonHint)
-            styleMask |= NSWindowStyleMaskMiniaturizable;
+            styleMask |= NSMiniaturizableWindowMask;
         if (flags & Qt::WindowMaximizeButtonHint)
-            styleMask |= NSWindowStyleMaskResizable;
+            styleMask |= NSResizableWindowMask;
     } else {
-        styleMask |= NSWindowStyleMaskClosable | NSWindowStyleMaskTitled;
+        styleMask |= NSClosableWindowMask | NSTitledWindowMask;
 
         if (type != Qt::Dialog)
-            styleMask |= NSWindowStyleMaskMiniaturizable;
+            styleMask |= NSMiniaturizableWindowMask;
     }
 
     if (type == Qt::Tool)
-        styleMask |= NSWindowStyleMaskUtilityWindow;
+        styleMask |= NSUtilityWindowMask;
 
     if (m_drawContentBorderGradient)
-        styleMask |= NSWindowStyleMaskTexturedBackground;
+        styleMask |= NSTexturedBackgroundWindowMask;
 
     // Don't wipe fullscreen state
-    if (m_view.window.styleMask & NSWindowStyleMaskFullScreen)
-        styleMask |= NSWindowStyleMaskFullScreen;
+    if (m_view.window.styleMask & NSFullScreenWindowMask)
+        styleMask |= NSFullScreenWindowMask;
 
     return styleMask;
 }
@@ -616,7 +616,7 @@ void QCocoaWindow::applyWindowState(Qt::WindowStates requestedState)
 
     const NSWindow *nsWindow = m_view.window;
 
-    if (nsWindow.styleMask & NSWindowStyleMaskUtilityWindow
+    if (nsWindow.styleMask & NSUtilityWindowMask
         && newState & (Qt::WindowMinimized | Qt::WindowFullScreen)) {
         qWarning() << window()->type() << "windows can not be made" << newState;
         handleWindowStateChanged(HandleUnconditionally);
@@ -690,14 +690,14 @@ void QCocoaWindow::toggleMaximized()
 
     // The NSWindow needs to be resizable, otherwise the window will
     // not be possible to zoom back to non-zoomed state.
-    const bool wasResizable = window.styleMask & NSWindowStyleMaskResizable;
-    window.styleMask |= NSWindowStyleMaskResizable;
+    const bool wasResizable = window.styleMask & NSResizableWindowMask;
+    window.styleMask |= NSResizableWindowMask;
 
     const id sender = window;
     [window zoom:sender];
 
     if (!wasResizable)
-        window.styleMask &= ~NSWindowStyleMaskResizable;
+        window.styleMask &= ~NSResizableWindowMask;
 }
 
 void QCocoaWindow::toggleFullScreen()
@@ -721,13 +721,13 @@ void QCocoaWindow::windowWillEnterFullScreen()
     // The NSWindow needs to be resizable, otherwise we'll end up with
     // the normal window geometry, centered in the middle of the screen
     // on a black background. The styleMask will be reset below.
-    m_view.window.styleMask |= NSWindowStyleMaskResizable;
+    m_view.window.styleMask |= NSResizableWindowMask;
 }
 
 bool QCocoaWindow::isTransitioningToFullScreen() const
 {
     NSWindow *window = m_view.window;
-    return window.styleMask & NSWindowStyleMaskFullScreen && !window.qt_fullScreen;
+    return window.styleMask & NSFullScreenWindowMask && !window.qt_fullScreen;
 }
 
 void QCocoaWindow::windowDidEnterFullScreen()
@@ -751,7 +751,7 @@ void QCocoaWindow::windowWillExitFullScreen()
 
     // The NSWindow needs to be resizable, otherwise we'll end up with
     // a weird zoom animation. The styleMask will be reset below.
-    m_view.window.styleMask |= NSWindowStyleMaskResizable;
+    m_view.window.styleMask |= NSResizableWindowMask;
 }
 
 void QCocoaWindow::windowDidExitFullScreen()
@@ -1708,7 +1708,7 @@ void QCocoaWindow::applyContentBorderThickness(NSWindow *window)
         return;
 
     if (!m_drawContentBorderGradient) {
-        window.styleMask = window.styleMask & ~NSWindowStyleMaskTexturedBackground;
+        window.styleMask = window.styleMask & ~NSTexturedBackgroundWindowMask;
         [window.contentView.superview setNeedsDisplay:YES];
         window.titlebarAppearsTransparent = NO;
         return;
@@ -1734,7 +1734,7 @@ void QCocoaWindow::applyContentBorderThickness(NSWindow *window)
 
     int effectiveBottomContentBorderThickness = m_bottomContentBorderThickness;
 
-    [window setStyleMask:[window styleMask] | NSWindowStyleMaskTexturedBackground];
+    [window setStyleMask:[window styleMask] | NSTexturedBackgroundWindowMask];
     window.titlebarAppearsTransparent = YES;
 
     // Setting titlebarAppearsTransparent to YES means that the border thickness has to account

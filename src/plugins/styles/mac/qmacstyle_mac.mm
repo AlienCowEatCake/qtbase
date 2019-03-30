@@ -459,9 +459,9 @@ static bool setupSlider(NSSlider *slider, const QStyleOptionSlider *sl)
 
         const bool ticksAbove = sl->tickPosition == QSlider::TicksAbove;
         if (sl->orientation == Qt::Horizontal)
-            slider.tickMarkPosition = ticksAbove ? NSTickMarkPositionAbove : NSTickMarkPositionBelow;
+            slider.tickMarkPosition = ticksAbove ? NSTickMarkAbove : NSTickMarkBelow;
         else
-            slider.tickMarkPosition = ticksAbove ? NSTickMarkPositionLeading : NSTickMarkPositionTrailing;
+            slider.tickMarkPosition = ticksAbove ? NSTickMarkLeft : NSTickMarkRight;
     } else {
         slider.numberOfTickMarks = 0;
     }
@@ -1867,10 +1867,10 @@ NSView *QMacStylePrivate::cocoaControl(CocoaControl widget) const
             auto *ctrl = static_cast<NSControl *>(bv);
             switch (widget.size) {
             case QStyleHelper::SizeSmall:
-                ctrl.controlSize = NSControlSizeSmall;
+                ctrl.controlSize = NSSmallControlSize;
                 break;
             case QStyleHelper::SizeMini:
-                ctrl.controlSize = NSControlSizeMini;
+                ctrl.controlSize = NSMiniControlSize;
                 break;
             default:
                 break;
@@ -1881,10 +1881,10 @@ NSView *QMacStylePrivate::cocoaControl(CocoaControl widget) const
             pi.indeterminate = (widget.type == ProgressIndicator_Indeterminate);
             switch (widget.size) {
             case QStyleHelper::SizeSmall:
-                pi.controlSize = NSControlSizeSmall;
+                pi.controlSize = NSSmallControlSize;
                 break;
             case QStyleHelper::SizeMini:
-                pi.controlSize = NSControlSizeMini;
+                pi.controlSize = NSMiniControlSize;
                 break;
             default:
                 break;
@@ -1930,10 +1930,10 @@ NSCell *QMacStylePrivate::cocoaCell(CocoaControl widget) const
 
         switch (widget.size) {
         case QStyleHelper::SizeSmall:
-            cell.controlSize = NSControlSizeSmall;
+            cell.controlSize = NSSmallControlSize;
             break;
         case QStyleHelper::SizeMini:
-            cell.controlSize = NSControlSizeMini;
+            cell.controlSize = NSMiniControlSize;
             break;
         default:
             break;
@@ -2273,9 +2273,9 @@ int QMacStyle::pixelMetric(PixelMetric metric, const QStyleOption *opt, const QW
         ret = 0;
         break;
     case PM_TitleBarHeight: {
-        NSUInteger style = NSWindowStyleMaskTitled;
+        NSUInteger style = NSTitledWindowMask;
         if (widget && ((widget->windowFlags() & Qt::Tool) == Qt::Tool))
-            style |= NSWindowStyleMaskUtilityWindow;
+            style |= NSUtilityWindowMask;
         ret = int([NSWindow frameRectForContentRect:NSZeroRect
                                           styleMask:style].size.height);
         break; }

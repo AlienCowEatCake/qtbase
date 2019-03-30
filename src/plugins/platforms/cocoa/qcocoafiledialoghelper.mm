@@ -518,8 +518,8 @@ static QString strippedText(QString s)
     NSRect textRect = { { 0.0, 3.0 }, { 100.0, 25.0 } };
     mTextField = [[NSTextField alloc] initWithFrame:textRect];
     [[mTextField cell] setFont:[NSFont systemFontOfSize:
-            [NSFont systemFontSizeForControlSize:NSControlSizeRegular]]];
-    [mTextField setAlignment:NSTextAlignmentRight];
+            [NSFont systemFontSizeForControlSize:NSRegularControlSize]]];
+    [mTextField setAlignment:NSRightTextAlignment];
     [mTextField setEditable:false];
     [mTextField setSelectable:false];
     [mTextField setBordered:false];

@@ -391,7 +391,7 @@ void QCocoaMenu::showPopup(const QWindow *parentWindow, const QRect &targetRect,
 
         if (view) {
             // Finally, we need to synthesize an event.
-            NSEvent *menuEvent = [NSEvent mouseEventWithType:NSEventTypeRightMouseDown
+            NSEvent *menuEvent = [NSEvent mouseEventWithType:NSRightMouseDown
                                           location:nsPos
                                           modifierFlags:0
                                           timestamp:0
