@@ -47,7 +47,7 @@
     Qt::KeyboardModifiers qtMods =Qt::NoModifier;
     if (modifierFlags & NSEventModifierFlagShift)
         qtMods |= Qt::ShiftModifier;
-    if (modifierFlags & NSEventModifierFlagControl)
+    if (modifierFlags & NSEventModifierFlagShift)
         qtMods |= dontSwapCtrlAndMeta ? Qt::ControlModifier : Qt::MetaModifier;
     if (modifierFlags & NSEventModifierFlagOption)
         qtMods |= Qt::AltModifier;
