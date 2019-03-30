@@ -225,8 +225,7 @@ static NSString *qt_mac_removePrivateUnicode(NSString *string)
     CHECK_MENU_CLASS(menu);
 
     // Interested only in Shift, Cmd, Ctrl & Alt Keys, so ignoring masks like, Caps lock, Num Lock ...
-    static const NSUInteger mask = NSEventModifierFlagShift | NSEventModifierFlagControl
-                                 | NSEventModifierFlagCommand | NSEventModifierFlagOption;
+    static const NSUInteger mask = NSShiftKeyMask | NSControlKeyMask | NSCommandKeyMask | NSAlternateKeyMask;
 
     // Change the private unicode keys to the ones used in setting the "Key Equivalents"
     NSString *characters = qt_mac_removePrivateUnicode(event.charactersIgnoringModifiers);
