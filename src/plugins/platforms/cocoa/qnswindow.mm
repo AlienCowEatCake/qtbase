@@ -52,13 +52,13 @@ Q_LOGGING_CATEGORY(lcQpaEvents, "qt.qpa.events");
 static bool isMouseEvent(NSEvent *ev)
 {
     switch ([ev type]) {
-    case NSEventTypeLeftMouseDown:
-    case NSEventTypeLeftMouseUp:
-    case NSEventTypeRightMouseDown:
-    case NSEventTypeRightMouseUp:
-    case NSEventTypeMouseMoved:
-    case NSEventTypeLeftMouseDragged:
-    case NSEventTypeRightMouseDragged:
+    case NSLeftMouseDown:
+    case NSLeftMouseUp:
+    case NSRightMouseDown:
+    case NSRightMouseUp:
+    case NSMouseMoved:
+    case NSLeftMouseDragged:
+    case NSRightMouseDragged:
         return true;
     default:
         return false;
@@ -264,7 +264,7 @@ static bool isMouseEvent(NSEvent *ev)
 
 - (NSColor *)backgroundColor
 {
-    return self.styleMask & NSWindowStyleMaskTexturedBackground ?
+    return self.styleMask & NSTexturedBackgroundWindowMask ?
                 [super backgroundColor] : [NSColor clearColor];
 }
 
