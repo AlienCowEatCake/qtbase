@@ -71,6 +71,11 @@ QImage::Format QNSWindowBackingStore::format() const
     return QRasterBackingStore::format();
 }
 
+#if !QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
+static const NSCompositingOperation NSCompositingOperationCopy = NSCompositeCopy;
+static const NSCompositingOperation NSCompositingOperationSourceOver = NSCompositeSourceOver;
+#endif
+
 /*!
     Flushes the given \a region from the specified \a window onto the
     screen.
