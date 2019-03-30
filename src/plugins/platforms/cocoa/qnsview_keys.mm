@@ -45,15 +45,15 @@
 {
     const bool dontSwapCtrlAndMeta = qApp->testAttribute(Qt::AA_MacDontSwapCtrlAndMeta);
     Qt::KeyboardModifiers qtMods =Qt::NoModifier;
-    if (modifierFlags & NSEventModifierFlagShift)
+    if (modifierFlags &  NSShiftKeyMask)
         qtMods |= Qt::ShiftModifier;
-    if (modifierFlags & NSEventModifierFlagShift)
+    if (modifierFlags & NSControlKeyMask)
         qtMods |= dontSwapCtrlAndMeta ? Qt::ControlModifier : Qt::MetaModifier;
-    if (modifierFlags & NSEventModifierFlagOption)
+    if (modifierFlags & NSAlternateKeyMask)
         qtMods |= Qt::AltModifier;
-    if (modifierFlags & NSEventModifierFlagCommand)
+    if (modifierFlags & NSCommandKeyMask)
         qtMods |= dontSwapCtrlAndMeta ? Qt::MetaModifier : Qt::ControlModifier;
-    if (modifierFlags & NSEventModifierFlagCommand)
+    if (modifierFlags & NSNumericPadKeyMask)
         qtMods |= Qt::KeypadModifier;
     return qtMods;
 }
@@ -201,7 +201,7 @@
     Q_UNUSED(sender);
 
     NSEvent *currentEvent = [NSApp currentEvent];
-    if (!currentEvent || currentEvent.type != NSEventTypeKeyDown)
+    if (!currentEvent || currentEvent.type != NSKeyDown)
         return;
 
     // Handling the key event may recurse back here through interpretKeyEvents
@@ -233,11 +233,11 @@
         Qt::Key qt_code;
     };
     static qt_mac_enum_mapper modifier_key_symbols[] = {
-        { NSEventModifierFlagShift, Qt::Key_Shift },
-        { NSEventModifierFlagControl, Qt::Key_Meta },
-        { NSEventModifierFlagCommand, Qt::Key_Control },
-        { NSEventModifierFlagOption, Qt::Key_Alt },
-        { NSEventModifierFlagCapsLock, Qt::Key_CapsLock },
+        { NSShiftKeyMask, Qt::Key_Shift },
+        { NSControlKeyMask, Qt::Key_Meta },
+        { NSCommandKeyMask, Qt::Key_Control },
+        { NSAlternateKeyMask, Qt::Key_Alt },
+        { NSAlphaShiftKeyMask, Qt::Key_CapsLock },
         { 0ul, Qt::Key_unknown } };
     for (int i = 0; modifier_key_symbols[i].mac_mask != 0u; ++i) {
         uint mac_mask = modifier_key_symbols[i].mac_mask;
