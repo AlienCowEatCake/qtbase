@@ -282,9 +282,7 @@
     nativeDrag->setLastMouseEvent(theEvent, self);
 
     const auto modifiers = [QNSView convertKeyModifiers:theEvent.modifierFlags];
-    auto button = cocoaButton2QtButton(theEvent);
-    if (button == Qt::LeftButton && m_sendUpAsRightButton)
-        button = Qt::RightButton;
+    const auto button = cocoaButton2QtButton(theEvent);
     const auto eventType = cocoaEvent2QtMouseEvent(theEvent);
 
     if (eventType == QEvent::MouseMove)
@@ -357,14 +355,12 @@
 
     if (m_sendUpAsRightButton && button == Qt::LeftButton)
         button = Qt::RightButton;
+    if (button == Qt::RightButton)
+        m_sendUpAsRightButton = false;
 
     m_buttons &= ~button;
 
     [self handleMouseEvent:theEvent];
-
-    if (button == Qt::RightButton)
-        m_sendUpAsRightButton = false;
-
     return true;
 }
 
