@@ -322,7 +322,7 @@ QXcodeTestLogger *QXcodeTestLogger::s_currentTestLogger = 0;
 
 QXcodeTestLogger::QXcodeTestLogger()
     : QAbstractTestLogger(0)
-    , m_testRuns([[NSMutableArray<XCTestRun *> arrayWithCapacity:2] retain])
+    , m_testRuns([[NSMutableArray arrayWithCapacity:2] retain])
 
 {
     Q_ASSERT(!s_currentTestLogger);
@@ -383,11 +383,11 @@ static bool isTestFunctionInActiveScope(const char *function)
 
     Q_ASSERT(activeScope == Selected);
 
-    static NSArray<NSString *> *forcedTests = [@[ @"initTestCase", @"initTestCase_data", @"cleanupTestCase" ] retain];
+    static NSArray *forcedTests = [@[ @"initTestCase", @"initTestCase_data", @"cleanupTestCase" ] retain];
     if ([forcedTests containsObject:[NSString stringWithUTF8String:function]])
         return true;
 
-    static NSArray<NSString *> *testsInScope = [[testScope componentsSeparatedByString:@","] retain];
+    static NSArray *testsInScope = [[testScope componentsSeparatedByString:@","] retain];
     bool inScope = [testsInScope containsObject:[NSString stringWithFormat:@"%s/%s",
                         QTestResult::currentTestObjectName(), function]];
 
