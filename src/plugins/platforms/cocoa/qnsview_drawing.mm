@@ -154,7 +154,11 @@
         << "due to being" << ([self layerExplicitlyRequested] ? "explicitly requested"
             : [self shouldUseMetalLayer] ? "needed by surface type" : "enabled by macOS");
     [super setLayer:layer];
-    layer.delegate = self;
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
+    if (__builtin_available(macOS 10.12, *)) {
+        layer.delegate = self;
+    }
+#endif
 }
 
 - (NSViewLayerContentsRedrawPolicy)layerContentsRedrawPolicy
@@ -187,6 +191,34 @@
         [self updateMetalLayerDrawableSize:static_cast<CAMetalLayer* >(layer)];
 }
 
+- (BOOL)wantsUpdateLayer
+{
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
+    if (__builtin_available(macOS 10.12, *)) {
+        return [super wantsUpdateLayer];
+    }
+#endif
+    return YES;
+}
+
+- (void)updateLayer
+{
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
+    if (__builtin_available(macOS 10.12, *)) {
+        return [super updateLayer];
+    }
+#endif
+
+    if (!m_platformWindow)
+        return;
+
+    qCDebug(lcQpaDrawing) << "[QNSView updateLayer]" << m_platformWindow->window();
+
+    // FIXME: Find out if there's a way to resolve the dirty rect like in drawRect:
+    m_platformWindow->handleExposeEvent(QRectF::fromCGRect(self.bounds).toRect());
+}
+
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
 - (void)displayLayer:(CALayer *)layer
 {
     if (!NSThread.isMainThread) {
@@ -208,6 +240,7 @@
     // FIXME: Find out if there's a way to resolve the dirty rect like in drawRect:
     m_platformWindow->handleExposeEvent(QRectF::fromCGRect(self.bounds).toRect());
 }
+#endif
 
 - (void)viewDidChangeBackingProperties
 {
