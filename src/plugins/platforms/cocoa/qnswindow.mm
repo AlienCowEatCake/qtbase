@@ -257,7 +257,7 @@ OSStatus CGSClearWindowTags(const CGSConnectionID, const CGSWindowID, int *, int
     QPointer<QCocoaWindow> m_platformWindow;
 }
 
-- (instancetype)initWithContentRect:(NSRect)contentRect styleMask:(NSWindowStyleMask)style
+- (instancetype)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)style
     backing:(NSBackingStoreType)backingStoreType defer:(BOOL)defer screen:(NSScreen *)screen
     platformWindow:(QCocoaWindow*)window
 {
@@ -379,7 +379,7 @@ OSStatus CGSClearWindowTags(const CGSConnectionID, const CGSWindowID, int *, int
     // Any mouse-press in the frame of the window, including the title bar buttons, should
     // close open popups. Presses within the window's content are handled to do that in the
     // NSView::mouseDown implementation.
-    if (theEvent.type == NSEventTypeLeftMouseDown && mouseEventInFrameStrut)
+    if (theEvent.type == NSLeftMouseDown && mouseEventInFrameStrut)
         [qnsview_cast(m_platformWindow->view()) closePopups:theEvent];
 
     [super sendEvent:theEvent];
