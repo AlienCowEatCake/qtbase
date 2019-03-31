@@ -90,7 +90,7 @@ private:
     void pushTestRunForTest(XCTest *test, bool start);
     XCTestRun *popTestRun();
 
-    NSMutableArray<XCTestRun *> *m_testRuns;
+    NSMutableArray *m_testRuns;
 
     static QXcodeTestLogger *s_currentTestLogger;
 };
