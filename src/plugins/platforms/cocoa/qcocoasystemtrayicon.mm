@@ -263,7 +263,7 @@ void QCocoaSystemTrayIcon::showMessage(const QString &title, const QString &mess
 
 void QCocoaSystemTrayIcon::statusItemClicked()
 {
-    auto *mouseEvent = NSApp.currentEvent;
+    auto *mouseEvent = [NSApp currentEvent];
 
     auto activationReason = QPlatformSystemTrayIcon::Unknown;
 

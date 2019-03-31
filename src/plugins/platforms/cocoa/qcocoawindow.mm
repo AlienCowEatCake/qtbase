@@ -301,14 +301,14 @@ void QCocoaWindow::setCocoaGeometry(const QRect &rect)
 
 bool QCocoaWindow::startSystemMove()
 {
-    switch (NSApp.currentEvent.type) {
+    switch ([NSApp currentEvent].type) {
     case NSLeftMouseDown:
     case NSRightMouseDown:
     case NSOtherMouseDown:
     case NSMouseMoved:
         // The documentation only describes starting a system move
         // based on mouse down events, but move events also work.
-        [m_view.window performWindowDragWithEvent:NSApp.currentEvent];
+        [m_view.window performWindowDragWithEvent:[NSApp currentEvent]];
         return true;
     default:
         return false;
@@ -377,7 +377,7 @@ void QCocoaWindow::setVisible(bool visible)
                     // Show the window as application modal
                     eventDispatcher()->beginModalSession(window());
                 } else if (m_view.window.canBecomeKeyWindow) {
-                    bool shouldBecomeKeyNow = !NSApp.modalWindow || m_view.window.worksWhenModal;
+                    bool shouldBecomeKeyNow = ![NSApp modalWindow] || m_view.window.worksWhenModal;
 
                     // Panels with becomesKeyOnlyIfNeeded set should not activate until a view
                     // with needsPanelToBecomeKey, for example a line edit, is clicked.
@@ -1770,7 +1770,7 @@ void QCocoaWindow::applyContentBorderThickness(NSWindow *window)
 
     if (!m_drawContentBorderGradient) {
         window.styleMask = window.styleMask & ~NSTexturedBackgroundWindowMask;
-        [window.contentView.superview setNeedsDisplay:YES];
+        [[window.contentView superview] setNeedsDisplay:YES];
         window.titlebarAppearsTransparent = NO;
         return;
     }
