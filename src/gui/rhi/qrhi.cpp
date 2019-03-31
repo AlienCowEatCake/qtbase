@@ -4251,14 +4251,15 @@ QRhi *QRhi::create(Implementation impl, QRhiInitParams *params, Flags flags, QRh
         break;
 #endif
     case Metal:
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
-        r->d = new QRhiMetal(static_cast<QRhiMetalInitParams *>(params),
-                             static_cast<QRhiMetalNativeHandles *>(importDevice));
-        break;
-#else
+#if (defined(Q_OS_MACOS) || defined(Q_OS_IOS)) && QT_MACOS_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12, __IPHONE_10_0)
+        if (__builtin_available(macOS 10.12, iOS 10.0, *)) {
+            r->d = new QRhiMetal(static_cast<QRhiMetalInitParams *>(params),
+                                 static_cast<QRhiMetalNativeHandles *>(importDevice));
+            break;
+        }
+#endif
         qWarning("This platform has no Metal support");
         break;
-#endif
     default:
         break;
     }

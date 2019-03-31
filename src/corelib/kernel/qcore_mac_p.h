@@ -350,10 +350,9 @@ QT_MAC_WEAK_IMPORT(_os_activity_current);
 #define QT_APPLE_SCOPED_LOG_ACTIVITY(...) QAppleLogActivity scopedLogActivity = QT_APPLE_LOG_ACTIVITY(__VA_ARGS__).enter();
 
 #else
-// No-ops for macOS 10.11. We don't need to provide QT_APPLE_SCOPED_LOG_ACTIVITY,
-// as all the call sites for that are in code that's only built on 10.12 and above.
 #define QT_APPLE_LOG_ACTIVITY_WITH_PARENT(...)
 #define QT_APPLE_LOG_ACTIVITY(...)
+#define QT_APPLE_SCOPED_LOG_ACTIVITY(...)
 #endif // QT_DARWIN_PLATFORM_SDK_EQUAL_OR_ABOVE
 
 // -------------------------------------------------------------------------
@@ -365,7 +364,7 @@ public:
     QMacNotificationObserver() {}
 
     template<typename Functor>
-    QMacNotificationObserver(id object, NSNotificationName name, Functor callback) {
+    QMacNotificationObserver(id object, NSString* name, Functor callback) {
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:name
             object:object queue:nil usingBlock:^(NSNotification *) {
                 callback();

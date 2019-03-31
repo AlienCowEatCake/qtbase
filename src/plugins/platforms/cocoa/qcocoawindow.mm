@@ -302,10 +302,10 @@ void QCocoaWindow::setCocoaGeometry(const QRect &rect)
 bool QCocoaWindow::startSystemMove()
 {
     switch (NSApp.currentEvent.type) {
-    case NSEventTypeLeftMouseDown:
-    case NSEventTypeRightMouseDown:
-    case NSEventTypeOtherMouseDown:
-    case NSEventTypeMouseMoved:
+    case NSLeftMouseDown:
+    case NSRightMouseDown:
+    case NSOtherMouseDown:
+    case NSMouseMoved:
         // The documentation only describes starting a system move
         // based on mouse down events, but move events also work.
         [m_view.window performWindowDragWithEvent:NSApp.currentEvent];
@@ -1570,7 +1570,7 @@ QCocoaNSWindow *QCocoaWindow::createNSWindow(bool shouldBePanel)
         }
     }
 
-    NSWindowStyleMask styleMask = windowStyleMask(flags);
+    NSUInteger styleMask = windowStyleMask(flags);
 
     if (!targetScreen) {
         qCWarning(lcQpaWindow) << "Window position" << rect << "outside any known screen, using primary screen";
@@ -1578,7 +1578,7 @@ QCocoaNSWindow *QCocoaWindow::createNSWindow(bool shouldBePanel)
         // Unless the window is created as borderless AppKit won't find a position and
         // screen that's close to the requested invalid position, and will always place
         // the window on the primary screen.
-        styleMask = NSWindowStyleMaskBorderless;
+        styleMask = NSBorderlessWindowMask;
     }
 
     rect.translate(-targetScreen->geometry().topLeft());
@@ -1589,11 +1589,11 @@ QCocoaNSWindow *QCocoaWindow::createNSWindow(bool shouldBePanel)
         // The macOS window manager has a bug, where if a screen is rotated, it will not allow
         // a window to be created within the area of the screen that has a Y coordinate (I quadrant)
         // higher than the height of the screen in its non-rotated state (including a magic padding
-        // of 24 points), unless the window is created with the NSWindowStyleMaskBorderless style mask.
+        // of 24 points), unless the window is created with the NSBorderlessWindowMask style mask.
         if (styleMask && (contentRect.origin.y + 24 > targetScreen->geometry().width())) {
             qCDebug(lcQpaWindow) << "Window positioned on portrait screen."
                 << "Adjusting style mask during creation";
-            styleMask = NSWindowStyleMaskBorderless;
+            styleMask = NSBorderlessWindowMask;
         }
     }
 
@@ -1646,7 +1646,11 @@ QCocoaNSWindow *QCocoaWindow::createNSWindow(bool shouldBePanel)
 
     nsWindow.restorable = NO;
     nsWindow.level = windowLevel(flags);
-    nsWindow.tabbingMode = NSWindowTabbingModeDisallowed;
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
+    if (__builtin_available(macOS 10.12, *)) {
+        nsWindow.tabbingMode = NSWindowTabbingModeDisallowed;
+    }
+#endif
 
     if (shouldBePanel) {
         // Qt::Tool windows hide on app deactivation, unless Qt::WA_MacAlwaysShowToolWindow is set
