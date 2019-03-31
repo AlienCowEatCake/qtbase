@@ -1680,8 +1680,8 @@ bool QMacStylePrivate::CocoaControl::getCocoaButtonTypeAndBezelStyle(NSButtonTyp
         *bezelStyle = NSShadowlessSquareBezelStyle;
         break;
     case Button_PushButton:
-        *buttonType = NSButtonTypeMomentaryPushIn;
-        *bezelStyle = NSBezelStyleRounded;
+        *buttonType = NSMomentaryPushInButton;
+        *bezelStyle = NSRoundedBezelStyle;
         break;
     default:
         return false;
@@ -3984,7 +3984,7 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
                 // Note: these days we use 'momentary push in' for Button_PushButton,
                 // but tabs are also rendered using NSButton/ButtonPushButton, and
                 // here we need 'push on/off' to make it work (tab highlight colors).
-                pb.buttonType = NSButtonTypePushOnPushOff;
+                pb.buttonType = NSPushOnPushOffButton;
             }
 
             pb.enabled = isEnabled;
