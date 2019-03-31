@@ -89,7 +89,7 @@ void QCocoaWindowManager::modalSessionChanged()
         auto naturalWindowLevel = platformWindow->windowLevel(window->flags());
         if (naturalWindowLevel > NSModalPanelWindowLevel) {
             NSWindow *nativeWindow = platformWindow->nativeWindow();
-            if (NSApp.modalWindow) {
+            if ([NSApp modalWindow]) {
                 // Lower window to that of the modal windows, but no less
                 nativeWindow.level = NSModalPanelWindowLevel;
                 if ([nativeWindow isVisible])
