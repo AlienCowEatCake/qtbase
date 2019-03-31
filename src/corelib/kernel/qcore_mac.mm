@@ -659,7 +659,7 @@ KeyValueObserver *QMacKeyValueObserver::observer = [[KeyValueObserver alloc] ini
 QT_END_NAMESPACE
 @implementation KeyValueObserver
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
-        change:(NSDictionary<NSKeyValueChangeKey, id> *)change context:(void *)context
+        change:(NSDictionary<NSString*, id> *)change context:(void *)context
 {
     Q_UNUSED(keyPath);
     Q_UNUSED(object);

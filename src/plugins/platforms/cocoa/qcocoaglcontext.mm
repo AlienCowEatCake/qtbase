@@ -461,7 +461,7 @@ void QCocoaGLContext::prepareDrawable(QCocoaWindow *platformWindow)
     // in combination with surface-backed views, as these together do not support high-DPI.
     if (prefersBestResolutionOpenGLSurface) {
         int rendererID = 0;
-        [m_context getValues:&rendererID forParameter:NSOpenGLContextParameterCurrentRendererID];
+        [m_context getValues:&rendererID forParameter:NSOpenGLCPCurrentRendererID];
         bool isSoftwareRenderer = (rendererID & kCGLRendererIDMatchingMask) == kCGLRendererGenericFloatID;
         if (isSoftwareRenderer && !view.layer) {
             qCInfo(lcQpaOpenGLContext) << "Disabling high resolution GL surface due to software renderer";

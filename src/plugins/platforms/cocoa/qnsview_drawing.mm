@@ -149,12 +149,16 @@
         << "with" << layer << "due to being" << ([self layerExplicitlyRequested] ? "explicitly requested"
             : [self shouldUseMetalLayer] ? "needed by surface type" : "enabled by macOS");
 
-    if (layer.delegate && layer.delegate != self) {
-        qCWarning(lcQpaDrawing) << "Layer already has delegate" << layer.delegate
-            << "This delegate is responsible for all view updates for" << self;
-    } else {
-        layer.delegate = self;
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
+    if (__builtin_available(macOS 10.12, *)) {
+        if (layer.delegate && layer.delegate != self) {
+            qCWarning(lcQpaDrawing) << "Layer already has delegate" << layer.delegate
+                << "This delegate is responsible for all view updates for" << self;
+        } else {
+            layer.delegate = self;
+        }
     }
+#endif
 
     [super setLayer:layer];
 
@@ -260,6 +264,34 @@
     m_platformWindow->handleExposeEvent(exposedRegion);
 }
 
+- (BOOL)wantsUpdateLayer
+{
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
+    if (__builtin_available(macOS 10.12, *)) {
+        return [super wantsUpdateLayer];
+    }
+#endif
+    return YES;
+}
+
+- (void)updateLayer
+{
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
+    if (__builtin_available(macOS 10.12, *)) {
+        return [super updateLayer];
+    }
+#endif
+
+    if (!m_platformWindow)
+        return;
+
+    qCDebug(lcQpaDrawing) << "[QNSView updateLayer]" << m_platformWindow->window();
+
+    // FIXME: Find out if there's a way to resolve the dirty rect like in drawRect:
+    m_platformWindow->handleExposeEvent(QRectF::fromCGRect(self.bounds).toRect());
+}
+
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
 /*
     This method is called by AppKit when we are layer-backed, where
     we are drawing into the layer.
@@ -284,5 +316,6 @@
     qCDebug(lcQpaDrawing) << "[QNSView displayLayer]" << m_platformWindow->window();
     m_platformWindow->handleExposeEvent(QRectF::fromCGRect(self.bounds).toRect());
 }
+#endif
 
 @end
