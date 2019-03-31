@@ -281,7 +281,7 @@
     return NSNotFound;
 }
 
-- (NSArray<NSString *> *)validAttributesForMarkedText
+- (NSArray *)validAttributesForMarkedText
 {
     if (!m_platformWindow)
         return nil;

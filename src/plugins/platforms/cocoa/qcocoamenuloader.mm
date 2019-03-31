@@ -341,7 +341,7 @@
     return menuItem.enabled;
 }
 
-- (NSArray<NSMenuItem *> *)mergeable
+- (NSArray *)mergeable
 {
     // Don't include the quitItem here, since we want it always visible and enabled regardless
     // Note that lastAppSpecificItem may be nil, so we can't use @[] here.
