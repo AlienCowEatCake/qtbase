@@ -473,8 +473,8 @@ QList<QCocoaWindow *> *QCocoaIntegration::popupWindowStack()
 void QCocoaIntegration::setApplicationIcon(const QIcon &icon) const
 {
     // Fall back to a size that looks good on the highest resolution screen available
-    auto fallbackSize = NSApp.dockTile.size.width * qGuiApp->devicePixelRatio();
-    NSApp.applicationIconImage = [NSImage imageFromQIcon:icon withSize:fallbackSize];
+    auto fallbackSize = [NSApp dockTile].size.width * qGuiApp->devicePixelRatio();
+    [NSApp setApplicationIconImage:[NSImage imageFromQIcon:icon withSize:fallbackSize]];
 }
 
 void QCocoaIntegration::beep() const
