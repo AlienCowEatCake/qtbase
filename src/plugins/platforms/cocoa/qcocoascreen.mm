@@ -74,7 +74,7 @@ QCocoaScreen::~QCocoaScreen()
 
 NSScreen *QCocoaScreen::nativeScreen() const
 {
-    NSArray<NSScreen *> *screens = [NSScreen screens];
+    NSArray *screens = [NSScreen screens];
 
     // Stale reference, screen configuration has changed
     if (m_screenIndex < 0 || (NSUInteger)m_screenIndex >= [screens count])
@@ -127,7 +127,7 @@ void QCocoaScreen::updateProperties()
     const qreal previousRefreshRate = m_refreshRate;
 
     // The reference screen for the geometry is always the primary screen
-    QRectF primaryScreenGeometry = QRectF::fromCGRect([[NSScreen screens] firstObject].frame);
+    QRectF primaryScreenGeometry = QRectF::fromCGRect([[[NSScreen screens] firstObject] frame]);
     m_geometry = qt_mac_flip(QRectF::fromCGRect(nsScreen.frame), primaryScreenGeometry).toRect();
     m_availableGeometry = qt_mac_flip(QRectF::fromCGRect(nsScreen.visibleFrame), primaryScreenGeometry).toRect();
 
@@ -211,13 +211,30 @@ void QCocoaScreen::requestUpdate()
         // to finish coalescing the events. This is incidental, but conveniently gives us the behavior
         // we are looking for, interleaving display-link updates and resize events.
         static CFMachPortRef eventTap = []() {
-            CFMachPortRef eventTap = CGEventTapCreateForPid(getpid(), kCGTailAppendEventTap,
-                kCGEventTapOptionListenOnly, NSLeftMouseDraggedMask,
-                [](CGEventTapProxy, CGEventType type, CGEventRef event, void *) -> CGEventRef {
-                    if (type == kCGEventTapDisabledByTimeout)
-                        qCWarning(lcQpaScreenUpdates) << "Event tap disabled due to timeout!";
-                    return event; // Listen only tap, so what we return doesn't really matter
-                }, nullptr);
+            CFMachPortRef eventTap;
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_11)
+            if (__builtin_available(macOS 10.11, *)) {
+                eventTap = CGEventTapCreateForPid(getpid(), kCGTailAppendEventTap,
+                    kCGEventTapOptionListenOnly, NSLeftMouseDraggedMask,
+                    [](CGEventTapProxy, CGEventType type, CGEventRef event, void *) -> CGEventRef {
+                        if (type == kCGEventTapDisabledByTimeout)
+                            qCWarning(lcQpaScreenUpdates) << "Event tap disabled due to timeout!";
+                        return event; // Listen only tap, so what we return doesn't really matter
+                    }, nullptr);
+            } else {
+#else
+            {
+#endif
+                ProcessSerialNumber psn = { 0, kCurrentProcess };
+                GetCurrentProcess(&psn);
+                eventTap = CGEventTapCreateForPSN(&psn, kCGTailAppendEventTap,
+                    kCGEventTapOptionListenOnly, NSLeftMouseDraggedMask,
+                    [](CGEventTapProxy, CGEventType type, CGEventRef event, void *) -> CGEventRef {
+                        if (type == kCGEventTapDisabledByTimeout)
+                            qCWarning(lcQpaScreenUpdates) << "Event tap disabled due to timeout!";
+                        return event; // Listen only tap, so what we return doesn't really matter
+                    }, nullptr);
+            }
             CGEventTapEnable(eventTap, false); // Event taps are normally enabled when created
             static CFRunLoopSourceRef runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0);
             CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, kCFRunLoopCommonModes);

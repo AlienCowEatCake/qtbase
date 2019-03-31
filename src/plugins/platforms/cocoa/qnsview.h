@@ -41,9 +41,12 @@
 #define QNSVIEW_H
 
 #include <AppKit/AppKit.h>
-#include <MetalKit/MetalKit.h>
 
 #include "private/qcore_mac_p.h"
+
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_11)
+#include <MetalKit/MetalKit.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 class QCocoaWindow;

@@ -84,7 +84,7 @@ namespace QCocoaAccessible {
 NSString *macRole(QAccessibleInterface *interface);
 NSString *macSubrole(QAccessibleInterface *interface);
 bool shouldBeIgnored(QAccessibleInterface *interface);
-NSArray<QT_MANGLE_NAMESPACE(QMacAccessibilityElement) *> *unignoredChildren(QAccessibleInterface *interface);
+NSArray *unignoredChildren(QAccessibleInterface *interface);
 NSString *getTranslatedAction(const QString &qtAction);
 QString translateAction(NSString *nsAction, QAccessibleInterface *interface);
 bool hasValueAttribute(QAccessibleInterface *interface);

@@ -113,8 +113,9 @@ static QCocoaWindow *toPlatformWindow(NSWindow *window)
 - (NSSize)window:(NSWindow *)window willUseFullScreenContentSize:(NSSize)proposedSize
 {
     Q_UNUSED(proposedSize);
-    Q_ASSERT(window == m_cocoaWindow->nativeWindow());
-    return NSSizeFromCGSize(m_cocoaWindow->screen()->geometry().size().toCGSize());
+    QCocoaWindow *platformWindow = toPlatformWindow(window);
+    Q_ASSERT(platformWindow);
+    return NSSizeFromCGSize(platformWindow->screen()->geometry().size().toCGSize());
 }
 #endif
 

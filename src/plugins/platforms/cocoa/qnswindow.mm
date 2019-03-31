@@ -99,7 +99,7 @@ static bool isMouseEvent(NSEvent *ev)
 + (void)applicationActivationChanged:(NSNotification*)notification
 {
     const id sender = self;
-    NSEnumerator<NSWindow*> *windowEnumerator = nullptr;
+    NSEnumerator *windowEnumerator = nullptr;
     NSApplication *application = [NSApplication sharedApplication];
 
 #if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
@@ -308,7 +308,7 @@ static bool isMouseEvent(NSEvent *ev)
     if (m_platformWindow->frameStrutEventsEnabled() && isMouseEvent(theEvent)) {
         NSPoint loc = [theEvent locationInWindow];
         NSRect windowFrame = [self convertRectFromScreen:self.frame];
-        NSRect contentFrame = self.contentView.frame;
+        NSRect contentFrame = [self.contentView frame];
         if (NSMouseInRect(loc, windowFrame, NO) && !NSMouseInRect(loc, contentFrame, NO))
             [qnsview_cast(m_platformWindow->view()) handleFrameStrutMouseEvent:theEvent];
     }

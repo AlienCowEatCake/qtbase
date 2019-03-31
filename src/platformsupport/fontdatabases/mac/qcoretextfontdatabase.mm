@@ -103,9 +103,9 @@ enum { LanguageCount = sizeof(languageForWritingSystem) / sizeof(const char *) }
 #ifdef Q_OS_OSX
 static NSInteger languageMapSort(id obj1, id obj2, void *context)
 {
-    NSArray<NSString *> *map1 = reinterpret_cast<NSArray<NSString *> *>(obj1);
-    NSArray<NSString *> *map2 = reinterpret_cast<NSArray<NSString *> *>(obj2);
-    NSArray<NSString *> *languages = reinterpret_cast<NSArray<NSString *> *>(context);
+    NSArray *map1 = reinterpret_cast<NSArray *>(obj1);
+    NSArray *map2 = reinterpret_cast<NSArray *>(obj2);
+    NSArray *languages = reinterpret_cast<NSArray *>(context);
 
     NSString *lang1 = [map1 objectAtIndex:0];
     NSString *lang2 = [map2 objectAtIndex:0];
@@ -500,9 +500,9 @@ QStringList QCoreTextFontDatabase::fallbacksForFamily(const QString &family, QFo
     if (!didPopulateStyleFallbacks) {
 #if defined(Q_OS_MACX)
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-        NSArray<NSString *> *languages = [defaults stringArrayForKey:@"AppleLanguages"];
+        NSArray *languages = [defaults stringArrayForKey:@"AppleLanguages"];
 
-        NSDictionary<NSString *, id> *fallbackDict = [NSDictionary<NSString *, id> dictionaryWithContentsOfFile:@"/System/Library/Frameworks/ApplicationServices.framework/Frameworks/CoreText.framework/Resources/DefaultFontFallbacks.plist"];
+        NSDictionary *fallbackDict = [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/Frameworks/ApplicationServices.framework/Frameworks/CoreText.framework/Resources/DefaultFontFallbacks.plist"];
 
         for (NSString *style in [fallbackDict allKeys]) {
             NSArray *list = [fallbackDict valueForKey:style];
@@ -513,7 +513,7 @@ QStringList QCoreTextFontDatabase::fallbacksForFamily(const QString &family, QFo
                 if ([item isKindOfClass:[NSArray class]]) {
                     NSArray *langs = [reinterpret_cast<NSArray *>(item)
                         sortedArrayUsingFunction:languageMapSort context:languages];
-                    for (NSArray<NSString *> *map in langs)
+                    for (NSArray *map in langs)
                         fallbackList.append(familyNameFromPostScriptName([map objectAtIndex:1]));
                 }
                 else if ([item isKindOfClass: [NSString class]])

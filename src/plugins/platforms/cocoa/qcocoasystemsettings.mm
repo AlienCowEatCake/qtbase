@@ -47,11 +47,11 @@
 
 #if !QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_14)
 @interface NSColor (MojaveForwardDeclarations)
-@property (class, strong, readonly) NSColor *selectedContentBackgroundColor NS_AVAILABLE_MAC(10_14);
-@property (class, strong, readonly) NSColor *unemphasizedSelectedTextBackgroundColor NS_AVAILABLE_MAC(10_14);
-@property (class, strong, readonly) NSColor *unemphasizedSelectedTextColor NS_AVAILABLE_MAC(10_14);
-@property (class, strong, readonly) NSColor *unemphasizedSelectedContentBackgroundColor NS_AVAILABLE_MAC(10_14);
-@property (class, strong, readonly) NSArray<NSColor *> *alternatingContentBackgroundColors NS_AVAILABLE_MAC(10_14);
+@property (class, strong, readonly) NSColor *selectedContentBackgroundColor /*NS_AVAILABLE_MAC(10_14)*/;
+@property (class, strong, readonly) NSColor *unemphasizedSelectedTextBackgroundColor /*NS_AVAILABLE_MAC(10_14)*/;
+@property (class, strong, readonly) NSColor *unemphasizedSelectedTextColor /*NS_AVAILABLE_MAC(10_14)*/;
+@property (class, strong, readonly) NSColor *unemphasizedSelectedContentBackgroundColor /*NS_AVAILABLE_MAC(10_14)*/;
+@property (class, strong, readonly) NSArray *alternatingContentBackgroundColors /*NS_AVAILABLE_MAC(10_14)*/;
 @end
 #endif
 
@@ -194,7 +194,7 @@ QHash<QPlatformTheme::Palette, QPalette*> qt_mac_createRolePalettes()
             pal.setColor(QPalette::Active, QPalette::ButtonText,
                          pal.color(QPalette::Active, QPalette::Text));
         } else if (mac_widget_colors[i].paletteRole == QPlatformTheme::ItemViewPalette) {
-            NSArray<NSColor *> *baseColors = nil;
+            NSArray *baseColors = nil;
             NSColor *activeHighlightColor = nil;
             if (__builtin_available(macOS 10.14, *)) {
                 baseColors = [NSColor alternatingContentBackgroundColors];

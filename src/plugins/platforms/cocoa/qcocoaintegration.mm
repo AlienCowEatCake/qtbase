@@ -262,8 +262,8 @@ QCocoaIntegration::Options QCocoaIntegration::options() const
 */
 void QCocoaIntegration::updateScreens()
 {
-    NSArray<NSScreen *> *scrs = [NSScreen screens];
-    NSMutableArray<NSScreen *> *screens = [NSMutableArray<NSScreen *> arrayWithArray:scrs];
+    NSArray *scrs = [NSScreen screens];
+    NSMutableArray *screens = [NSMutableArray arrayWithArray:scrs];
     if ([screens count] == 0)
         if ([NSScreen mainScreen])
            [screens addObject:[NSScreen mainScreen]];

@@ -174,8 +174,8 @@ static void convertLineOffset(QAccessibleTextInterface *text, int *line, int *of
     return YES;
 }
 
-- (NSArray<NSString *> *)accessibilityAttributeNames {
-    static NSArray<NSString *> *defaultAttributes = [@[
+- (NSArray *)accessibilityAttributeNames {
+    static NSArray *defaultAttributes = [@[
         NSAccessibilityRoleAttribute,
         NSAccessibilityRoleDescriptionAttribute,
         NSAccessibilitySubroleAttribute,
@@ -195,7 +195,7 @@ static void convertLineOffset(QAccessibleTextInterface *text, int *line, int *of
     if (!iface || !iface->isValid())
         return defaultAttributes;
 
-    NSMutableArray<NSString *> *attributes = [[NSMutableArray<NSString *> alloc] initWithCapacity:defaultAttributes.count];
+    NSMutableArray *attributes = [[NSMutableArray alloc] initWithCapacity:defaultAttributes.count];
     [attributes addObjectsFromArray:defaultAttributes];
 
     if (QCocoaAccessible::hasValueAttribute(iface)) {
