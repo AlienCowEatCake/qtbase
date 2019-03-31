@@ -72,7 +72,11 @@
 @property (assign) NSWindow* previousWindow;
 @end
 
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
 @interface QT_MANGLE_NAMESPACE(QNSView) (Drawing) <CALayerDelegate>
+#else
+@interface QT_MANGLE_NAMESPACE(QNSView) (Drawing)
+#endif
 - (void)initDrawing;
 @end
 
