@@ -90,7 +90,9 @@ qtConfig(sessionmanager) {
 
 RESOURCES += qcocoaresources.qrc
 
-LIBS += -framework AppKit -framework CoreServices -framework Carbon -framework IOKit -framework QuartzCore -framework CoreVideo -framework Metal -framework IOSurface -lcups
+LIBS += -framework AppKit -framework CoreServices -framework Carbon -framework IOKit -framework QuartzCore -framework CoreVideo -framework IOSurface -lcups
+versionAtLeast(QMAKE_MAC_SDK_VERSION, 10.11): \
+    LIBS += -framework Metal
 
 DEFINES += QT_NO_FOREACH
 
