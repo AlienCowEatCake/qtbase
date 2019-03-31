@@ -96,9 +96,14 @@
 
 - (BOOL)shouldUseMetalLayer
 {
-    // MetalSurface needs a layer, and so does VulkanSurface (via MoltenVK)
-    QSurface::SurfaceType surfaceType = m_platformWindow->window()->surfaceType();
-    return surfaceType == QWindow::MetalSurface || surfaceType == QWindow::VulkanSurface;
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_11)
+    if (__builtin_available(macOS 10.11, *)) {
+        // MetalSurface needs a layer, and so does VulkanSurface (via MoltenVK)
+        QSurface::SurfaceType surfaceType = m_platformWindow->window()->surfaceType();
+        return surfaceType == QWindow::MetalSurface || surfaceType == QWindow::VulkanSurface;
+    }
+#endif
+    return NO;
 }
 
 /*
@@ -120,17 +125,21 @@
 */
 - (CALayer *)makeBackingLayer
 {
-    if ([self shouldUseMetalLayer]) {
-        // Check if Metal is supported. If it isn't then it's most likely
-        // too late at this point and the QWindow will be non-functional,
-        // but we can at least print a warning.
-        if ([MTLCreateSystemDefaultDevice() autorelease]) {
-            return [CAMetalLayer layer];
-        } else {
-            qCWarning(lcQpaDrawing) << "Failed to create QWindow::MetalSurface."
-                << "Metal is not supported by any of the GPUs in this system.";
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_11)
+    if (__builtin_available(macOS 10.11, *)) {
+        if ([self shouldUseMetalLayer]) {
+            // Check if Metal is supported. If it isn't then it's most likely
+            // too late at this point and the QWindow will be non-functional,
+            // but we can at least print a warning.
+            if ([MTLCreateSystemDefaultDevice() autorelease]) {
+                return [CAMetalLayer layer];
+            } else {
+                qCWarning(lcQpaDrawing) << "Failed to create QWindow::MetalSurface."
+                    << "Metal is not supported by any of the GPUs in this system.";
+            }
         }
     }
+#endif
 
     return [super makeBackingLayer];
 }

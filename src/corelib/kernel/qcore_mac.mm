@@ -63,6 +63,13 @@
 #include "qvarlengtharray.h"
 #include "private/qlocking_p.h"
 
+#if !defined (LC_VERSION_MIN_WATCHOS)
+#define LC_VERSION_MIN_WATCHOS 0x30
+#endif
+#if !defined (LC_VERSION_MIN_TVOS)
+#define LC_VERSION_MIN_TVOS 0x2F
+#endif
+
 QT_BEGIN_NAMESPACE
 
 // --------------------------------------------------------------------------
@@ -659,7 +666,7 @@ KeyValueObserver *QMacKeyValueObserver::observer = [[KeyValueObserver alloc] ini
 QT_END_NAMESPACE
 @implementation KeyValueObserver
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
-        change:(NSDictionary<NSString*, id> *)change context:(void *)context
+        change:(NSDictionary *)change context:(void *)context
 {
     Q_UNUSED(keyPath);
     Q_UNUSED(object);

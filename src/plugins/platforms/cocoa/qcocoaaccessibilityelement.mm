@@ -182,7 +182,7 @@ static void convertLineOffset(QAccessibleTextInterface *text, int *line, int *of
         return false;
     }
     // Just check if the app thinks we're focused.
-    id focusedElement = NSApp.accessibilityApplicationFocusedUIElement;
+    id focusedElement = [NSApp accessibilityApplicationFocusedUIElement];
     return [focusedElement isEqual:self];
 }
 
