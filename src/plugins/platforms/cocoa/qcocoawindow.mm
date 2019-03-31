@@ -1512,7 +1512,7 @@ QCocoaNSWindow *QCocoaWindow::createNSWindow(bool shouldBePanel)
     // a window to be created within the area of the screen that has a Y coordinate (I quadrant)
     // higher than the height of the screen  in its non-rotated state, unless the window is
     // created with the NSWindowStyleMaskBorderless style mask.
-    NSWindowStyleMask styleMask = windowStyleMask(flags);
+    NSUInteger styleMask = windowStyleMask(flags);
 
     QRect rect = geometry();
 
@@ -1530,7 +1530,7 @@ QCocoaNSWindow *QCocoaWindow::createNSWindow(bool shouldBePanel)
         // AppKit will only reposition a window that's outside the target screen area if
         // the window has a title bar. If left out, the window ends up with no screen.
         // The style mask will be corrected to the original style mask in setWindowFlags.
-        styleMask |= NSWindowStyleMaskTitled;
+        styleMask |= NSTitledWindowMask;
     }
 
     rect.translate(-targetScreen->geometry().topLeft());
