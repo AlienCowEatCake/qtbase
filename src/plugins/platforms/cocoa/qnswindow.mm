@@ -99,7 +99,7 @@ static bool isMouseEvent(NSEvent *ev)
 + (void)applicationActivationChanged:(NSNotification*)notification
 {
     const id sender = self;
-    NSEnumerator<NSWindow*> *windowEnumerator = nullptr;
+    NSEnumerator *windowEnumerator = nullptr;
     NSApplication *application = [NSApplication sharedApplication];
 
 #if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
@@ -184,7 +184,7 @@ static bool isMouseEvent(NSEvent *ev)
     // them 'child' windows, so we treat them as operable within the current
     // modal session.
 
-    if (!NSApp.modalWindow)
+    if (![NSApp modalWindow])
         return NO;
 
     // Special case popup windows (menus, completions, etc), as these usually
@@ -197,10 +197,10 @@ static bool isMouseEvent(NSEvent *ev)
 
     // If the current modal window (top level modal session) is not a Qt window we
     // have no way of knowing if this window is transient child of the modal window.
-    if (![NSApp.modalWindow conformsToProtocol:@protocol(QNSWindowProtocol)])
+    if (![[NSApp modalWindow] conformsToProtocol:@protocol(QNSWindowProtocol)])
         return NO;
 
-    if (auto *modalWindow = static_cast<QCocoaNSWindow *>(NSApp.modalWindow).platformWindow) {
+    if (auto *modalWindow = static_cast<QCocoaNSWindow *>([NSApp modalWindow]).platformWindow) {
         if (modalWindow->window()->isAncestorOf(m_platformWindow->window(), QWindow::IncludeTransients))
             return YES;
     }
@@ -370,7 +370,7 @@ OSStatus CGSClearWindowTags(const CGSConnectionID, const CGSWindowID, int *, int
         if (isMouseEvent(theEvent)) {
             const NSPoint loc = theEvent.locationInWindow;
             const NSRect windowFrame = [self convertRectFromScreen:self.frame];
-            const NSRect contentFrame = self.contentView.frame;
+            const NSRect contentFrame = [self.contentView frame];
             if (NSMouseInRect(loc, windowFrame, NO) && !NSMouseInRect(loc, contentFrame, NO))
                 return true;
         }
