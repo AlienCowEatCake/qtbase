@@ -257,7 +257,7 @@ OSStatus CGSClearWindowTags(const CGSConnectionID, const CGSWindowID, int *, int
     QPointer<QCocoaWindow> m_platformWindow;
 }
 
-- (instancetype)initWithContentRect:(NSRect)contentRect styleMask:(NSWindowStyleMask)style
+- (instancetype)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)style
     backing:(NSBackingStoreType)backingStoreType defer:(BOOL)defer screen:(NSScreen *)screen
     platformWindow:(QCocoaWindow*)window
 {
