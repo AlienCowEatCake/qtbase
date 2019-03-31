@@ -212,7 +212,7 @@ bool QCocoaDrag::maybeDragMultipleItems()
     NSImage *dragImage = [NSImage imageFromQImage:pixmap.toImage()];
     Q_ASSERT(dragImage);
 
-    NSMutableArray<NSDraggingItem *> *dragItems = [[[NSMutableArray alloc] init] autorelease];
+    NSMutableArray *dragItems = [[[NSMutableArray alloc] init] autorelease];
     const NSPoint itemLocation = m_drag->hotSpot().toCGPoint();
     // 0. We start from URLs, which can be actually in a list (thus technically
     // only ONE item in the pasteboard. The fact it's only one does not help, we are

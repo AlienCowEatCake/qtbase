@@ -89,7 +89,7 @@ void QCocoaWindowManager::modalSessionChanged()
         auto naturalWindowLevel = platformWindow->windowLevel(window->flags());
         if (naturalWindowLevel > NSModalPanelWindowLevel) {
             NSWindow *nativeWindow = platformWindow->nativeWindow();
-            if (NSApp.modalWindow) {
+            if ([NSApp modalWindow]) {
                 // Lower window to that of the modal windows, but no less
                 nativeWindow.level = NSModalPanelWindowLevel;
                 if ([nativeWindow isVisible])
@@ -105,7 +105,7 @@ void QCocoaWindowManager::modalSessionChanged()
     // up by AppKit when needed, but to make sure AppKit also reflects the state
     // in the window tag, so that the window can be ordered front by clicking it,
     // we need to explicitly call setWorksWhenModal.
-    for (id window in NSApp.windows) {
+    for (id window in [NSApp windows]) {
         if ([window isKindOfClass:[QNSPanel class]]) {
             auto *panel = static_cast<QNSPanel *>(window);
             // Call setter to tell AppKit that our state has changed
