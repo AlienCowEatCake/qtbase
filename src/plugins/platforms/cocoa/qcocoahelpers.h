@@ -74,8 +74,8 @@ class QPixmap;
 class QString;
 
 // Conversion functions
-QStringList qt_mac_NSArrayToQStringList(NSArray<NSString *> *nsarray);
-NSMutableArray<NSString *> *qt_mac_QStringListToNSMutableArray(const QStringList &list);
+QStringList qt_mac_NSArrayToQStringList(NSArray *nsarray);
+NSMutableArray *qt_mac_QStringListToNSMutableArray(const QStringList &list);
 
 NSDragOperation qt_mac_mapDropAction(Qt::DropAction action);
 NSDragOperation qt_mac_mapDropActions(Qt::DropActions actions);
