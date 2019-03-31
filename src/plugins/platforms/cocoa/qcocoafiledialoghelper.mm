@@ -186,7 +186,7 @@ static QString strippedText(QString s)
 
     if (mSavePanel.sheet)
         [NSApp endSheet:mSavePanel];
-    else if (NSApp.modalWindow == mSavePanel)
+    else if ([NSApp modalWindow] == mSavePanel)
         [NSApp stopModal];
     else
         [mSavePanel close];
@@ -378,7 +378,7 @@ static QString strippedText(QString s)
 {
     if (mOpenPanel) {
         QList<QUrl> result;
-        NSArray<NSURL *> *array = [mOpenPanel URLs];
+        NSArray *array = [mOpenPanel URLs];
         for (NSURL *url in array) {
             QString path = QString::fromNSString(url.path).normalized(QString::NormalizationForm_C);
             result << QUrl::fromLocalFile(path);

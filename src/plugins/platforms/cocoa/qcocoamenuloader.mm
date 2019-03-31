@@ -331,7 +331,7 @@
     return menuItem.enabled;
 }
 
-- (NSArray<NSMenuItem *> *)mergeable
+- (NSArray *)mergeable
 {
     // Don't include the quitItem here, since we want it always visible and enabled regardless
     auto items = [NSArray arrayWithObjects:preferencesItem, aboutItem,  aboutQtItem,

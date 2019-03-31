@@ -256,12 +256,12 @@ bool shouldBeIgnored(QAccessibleInterface *interface)
     return false;
 }
 
-NSArray<QMacAccessibilityElement *> *unignoredChildren(QAccessibleInterface *interface)
+NSArray *unignoredChildren(QAccessibleInterface *interface)
 {
     int numKids = interface->childCount();
     // qDebug() << "Children for: " << axid << iface << " are: " << numKids;
 
-    NSMutableArray<QMacAccessibilityElement *> *kids = [NSMutableArray<QMacAccessibilityElement *> arrayWithCapacity:numKids];
+    NSMutableArray *kids = [NSMutableArray arrayWithCapacity:numKids];
     for (int i = 0; i < numKids; ++i) {
         QAccessibleInterface *child = interface->child(i);
         if (!child || !child->isValid() || child->state().invalid || child->state().invisible)
