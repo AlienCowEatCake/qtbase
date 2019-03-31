@@ -71,7 +71,7 @@ static QString macMonthName(int month, QSystemLocale::QueryType type)
         = CFDateFormatterCreate(0, QCFType<CFLocaleRef>(CFLocaleCopyCurrent()),
                                 kCFDateFormatterNoStyle,  kCFDateFormatterNoStyle);
 
-    CFDateFormatterKey formatterType;
+    CFStringRef formatterType;
     switch (type) {
         case QSystemLocale::MonthNameLong:
             formatterType = kCFDateFormatterMonthSymbols;
