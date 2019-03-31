@@ -69,7 +69,7 @@ Q_LOGGING_CATEGORY(lcQpaScreen, "qt.qpa.screen");
 // Conversion Functions
 //
 
-QStringList qt_mac_NSArrayToQStringList(NSArray<NSString *> *array)
+QStringList qt_mac_NSArrayToQStringList(NSArray *array)
 {
     QStringList result;
     for (NSString *string in array)
@@ -77,9 +77,9 @@ QStringList qt_mac_NSArrayToQStringList(NSArray<NSString *> *array)
     return result;
 }
 
-NSMutableArray<NSString *> *qt_mac_QStringListToNSMutableArray(const QStringList &list)
+NSMutableArray *qt_mac_QStringListToNSMutableArray(const QStringList &list)
 {
-    NSMutableArray<NSString *> *result = [NSMutableArray<NSString *> arrayWithCapacity:list.size()];
+    NSMutableArray *result = [NSMutableArray arrayWithCapacity:list.size()];
     for (const QString &string : list)
         [result addObject:string.toNSString()];
     return result;
