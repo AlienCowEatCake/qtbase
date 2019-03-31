@@ -60,7 +60,7 @@ QT_FORWARD_DECLARE_CLASS(QCocoaWindow)
 #define QNSWindowProtocol QT_MANGLE_NAMESPACE(QNSWindowProtocol)
 
 @protocol QNSWindowProtocol
-- (instancetype)initWithContentRect:(NSRect)contentRect styleMask:(NSWindowStyleMask)style
+- (instancetype)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)style
     backing:(NSBackingStoreType)backingStoreType defer:(BOOL)flag screen:(NSScreen *)screen
     platformWindow:(QCocoaWindow*)window;
 - (void)closeAndRelease;
