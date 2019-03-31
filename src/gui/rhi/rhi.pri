@@ -44,14 +44,16 @@ win32 {
 }
 
 macos|ios {
-    HEADERS += \
-        rhi/qrhimetal_p.h \
-        rhi/qrhimetal_p_p.h
-    SOURCES += \
-        rhi/qrhimetal.mm
+    versionAtLeast(QMAKE_MAC_SDK_VERSION, 10.12) {
+        HEADERS += \
+            rhi/qrhimetal_p.h \
+            rhi/qrhimetal_p_p.h
+        SOURCES += \
+            rhi/qrhimetal.mm
 
-    macos: LIBS += -framework AppKit
-    LIBS += -framework Metal
+        macos: LIBS += -framework AppKit
+        LIBS += -framework Metal
+    }
 }
 
 include($$PWD/../../3rdparty/VulkanMemoryAllocator.pri)
