@@ -37,6 +37,15 @@
 #endif
 #include <vector>
 
+#if defined (Q_OS_MACOS) && QT_MACOS_DEPLOYMENT_TARGET_BELOW(__MAC_10_12)
+#ifdef __cpp_lib_shared_mutex
+#undef __cpp_lib_shared_mutex
+#endif
+#ifdef __cpp_lib_shared_timed_mutex
+#undef __cpp_lib_shared_timed_mutex
+#endif
+#endif
+
 // Wrapers that take pointers instead of reference to have the same interface as Qt
 template <typename T>
 struct LockerWrapper : T
