@@ -174,7 +174,7 @@ QT_NAMESPACE_ALIAS_OBJC_CLASS(NotificationReceiver);
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
-        change:(NSDictionary<NSKeyValueChangeKey, id> *)change context:(void *)context
+        change:(NSDictionary<NSString *, id> *)change context:(void *)context
 {
     Q_UNUSED(keyPath);
     Q_UNUSED(object);

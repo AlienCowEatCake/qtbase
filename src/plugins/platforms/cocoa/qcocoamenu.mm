@@ -251,7 +251,7 @@ void QCocoaMenu::syncMenuItem_helper(QPlatformMenuItem *menuItem, bool menubarUp
                 oldItem.enabled = NO;
                 oldItem.hidden = YES;
                 oldItem.keyEquivalent = @"";
-                oldItem.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+                oldItem.keyEquivalentModifierMask = NSCommandKeyMask;
 
             } else {
                 [m_nativeMenu removeItem:oldItem];
