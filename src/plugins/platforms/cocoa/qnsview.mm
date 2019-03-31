@@ -72,7 +72,11 @@
 @property (assign) NSWindow* previousWindow;
 @end
 
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
 @interface QNSView (Drawing) <CALayerDelegate>
+#else
+@interface QNSView (Drawing)
+#endif
 - (void)initDrawing;
 @end
 
