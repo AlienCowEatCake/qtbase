@@ -212,7 +212,7 @@ void QCocoaScreen::requestUpdate()
         // we are looking for, interleaving display-link updates and resize events.
         static CFMachPortRef eventTap = []() {
             CFMachPortRef eventTap = CGEventTapCreateForPid(getpid(), kCGTailAppendEventTap,
-                kCGEventTapOptionListenOnly, NSEventMaskLeftMouseDragged,
+                kCGEventTapOptionListenOnly, NSLeftMouseDraggedMask,
                 [](CGEventTapProxy, CGEventType type, CGEventRef event, void *) -> CGEventRef {
                     if (type == kCGEventTapDisabledByTimeout)
                         qCWarning(lcQpaScreenUpdates) << "Event tap disabled due to timeout!";
