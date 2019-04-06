@@ -52,9 +52,11 @@
 typedef uint32_t IOSurfaceLockOptions;
 #endif
 
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
 // CGColorSpaceCopyPropertyList is available on 10.12 and above,
 // but was only added in the 10.14 SDK, so declare it just in case.
 extern "C" CFPropertyListRef CGColorSpaceCopyPropertyList(CGColorSpaceRef space);
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -90,8 +92,16 @@ QIOSurfaceGraphicsBuffer::QIOSurfaceGraphicsBuffer(const QSize &size, const QPix
     Q_ASSERT(size_t(byteCount()) == totalBytes);
 
     if (colorSpace) {
-        IOSurfaceSetValue(m_surface, CFSTR("IOSurfaceColorSpace"),
-            QCFType<CFPropertyListRef>(CGColorSpaceCopyPropertyList(colorSpace)));
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
+        if (__builtin_available(macOS 10.12, *)) {
+            IOSurfaceSetValue(m_surface, CFSTR("IOSurfaceColorSpace"),
+                QCFType<CFPropertyListRef>(CGColorSpaceCopyPropertyList(colorSpace)));
+        } else
+#endif
+        {
+            IOSurfaceSetValue(m_surface, CFSTR("IOSurfaceColorSpace"),
+                QCFType<CFDataRef>(CGColorSpaceCopyICCProfile(colorSpace)));
+        }
     }
 }
 
