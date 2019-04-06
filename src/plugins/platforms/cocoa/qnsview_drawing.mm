@@ -171,22 +171,25 @@
     return NSViewLayerContentsRedrawDuringViewResize;
 }
 
-#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_11)
-- (void)updateMetalLayerDrawableSize:(CAMetalLayer *)layer
+- (void)updateMetalLayerDrawableSize:(CALayer *)layer
 {
-    CGSize drawableSize = layer.bounds.size;
-    drawableSize.width *= layer.contentsScale;
-    drawableSize.height *= layer.contentsScale;
-    layer.drawableSize = drawableSize;
-}
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_11)
+    if (__builtin_available(macOS 10.11, *)) {
+        CAMetalLayer *metalLayer = static_cast<CAMetalLayer* >(layer);
+        CGSize drawableSize = metalLayer.bounds.size;
+        drawableSize.width *= metalLayer.contentsScale;
+        drawableSize.height *= metalLayer.contentsScale;
+        metalLayer.drawableSize = drawableSize;
+    }
 #endif
+}
 
 - (void)layoutSublayersOfLayer:(CALayer *)layer
 {
 #if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_11)
     if (__builtin_available(macOS 10.11, *)) {
         if ([layer isKindOfClass:CAMetalLayer.class])
-            [self updateMetalLayerDrawableSize:static_cast<CAMetalLayer* >(layer)];
+            [self updateMetalLayerDrawableSize:layer];
     }
 #endif
 }
@@ -219,7 +222,7 @@
     if (__builtin_available(macOS 10.11, *)) {
         // Metal layers must be manually updated on e.g. screen change
         if ([layer isKindOfClass:CAMetalLayer.class]) {
-            [self updateMetalLayerDrawableSize:static_cast<CAMetalLayer* >(layer)];
+            [self updateMetalLayerDrawableSize:layer];
             [self setNeedsDisplay:YES];
         }
     }
