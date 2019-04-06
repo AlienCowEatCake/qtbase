@@ -306,10 +306,15 @@ bool QCocoaWindow::startSystemMove()
     case NSRightMouseDown:
     case NSOtherMouseDown:
     case NSMouseMoved:
-        // The documentation only describes starting a system move
-        // based on mouse down events, but move events also work.
-        [m_view.window performWindowDragWithEvent:[NSApp currentEvent]];
-        return true;
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_11)
+        if (__builtin_available(macOS 10.11, *)) {
+            // The documentation only describes starting a system move
+            // based on mouse down events, but move events also work.
+            [m_view.window performWindowDragWithEvent:[NSApp currentEvent]];
+            return true;
+        }
+#endif
+        return false;
     default:
         return false;
     }

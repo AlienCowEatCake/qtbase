@@ -514,10 +514,14 @@ static void fixStaleGeometry(NSSlider *slider)
     const NSRect barRect = [cell barRectFlipped:NO];
     const NSSize sliderSize = slider.frame.size;
     CGFloat difference = 0.;
-    if (slider.vertical)
-        difference = std::abs(sliderSize.height - barRect.size.height);
-    else
-        difference = std::abs(sliderSize.width - barRect.size.width);
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
+    if (__builtin_available(macOS 10.12, *)) {
+        if (slider.vertical)
+            difference = std::abs(sliderSize.height - barRect.size.height);
+        else
+            difference = std::abs(sliderSize.width - barRect.size.width);
+    }
+#endif
 
     if (difference > 6.) {
         // Stale ...
