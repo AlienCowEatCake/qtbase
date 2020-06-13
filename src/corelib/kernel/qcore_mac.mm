@@ -262,11 +262,14 @@ QMacAutoReleasePool::QMacAutoReleasePool()
 
 #ifdef QT_DEBUG
     void *poolFrame = nullptr;
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_14)
     if (__builtin_available(macOS 10.14, iOS 12.0, tvOS 12.0, watchOS 5.0, *)) {
         void *frame;
         if (backtrace_from_fp(__builtin_frame_address(0), &frame, 1))
             poolFrame = frame;
-    } else {
+    } else
+#endif
+    {
         static const int maxFrames = 3;
         void *callstack[maxFrames];
         if (backtrace(callstack, maxFrames) == maxFrames)
