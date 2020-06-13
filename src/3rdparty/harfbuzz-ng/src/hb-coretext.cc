@@ -34,7 +34,16 @@
 
 #include "hb-coretext.hh"
 
-extern "C" CFArrayRef CTFontManagerCreateFontDescriptorsFromData(CFDataRef data) CT_AVAILABLE(macos(10.13), ios(7.0), watchos(2.0), tvos(9.0));
+#define CTFontManagerCreateFontDescriptorsFromData _hb_CTFontManagerCreateFontDescriptorsFromData
+static inline CFArrayRef CTFontManagerCreateFontDescriptorsFromData(CFDataRef data)
+{
+  static void * const func = []() -> void * {
+    if (CFBundleRef bundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.CoreText")))
+      return CFBundleGetFunctionPointerForName(bundle, CFSTR("CTFontManagerCreateFontDescriptorsFromData"));
+    return nullptr;
+  }();
+  return func ? reinterpret_cast<CFArrayRef(*)(CFDataRef data)>(func)(data) : nullptr;
+}
 
 /**
  * SECTION:hb-coretext

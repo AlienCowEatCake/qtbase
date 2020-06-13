@@ -35,6 +35,9 @@
 #  include <CoreGraphics/CoreGraphics.h>
 #else
 #  include <ApplicationServices/ApplicationServices.h>
+#  ifdef verify
+#    undef verify
+#  endif
 #endif
 
 HB_BEGIN_DECLS
