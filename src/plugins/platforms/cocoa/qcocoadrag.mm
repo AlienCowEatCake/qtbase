@@ -131,7 +131,7 @@ Qt::DropAction QCocoaDrag::drag(QDrag *o)
     m_drag = o;
     m_executed_drop_action = Qt::IgnoreAction;
 
-    QMacPasteboard dragBoard(CFStringRef(NSPasteboardNameDrag), QMacInternalPasteboardMime::MIME_DND);
+    QMacPasteboard dragBoard((CFStringRef) NSDragPboard, QMacInternalPasteboardMime::MIME_DND);
     m_drag->mimeData()->setData(QLatin1String("application/x-qt-mime-type-name"), QByteArray("dummy"));
     dragBoard.setMimeData(m_drag->mimeData(), QMacPasteboard::LazyRequest);
 
@@ -150,7 +150,7 @@ Qt::DropAction QCocoaDrag::drag(QDrag *o)
     CGFloat flippedY = dragImage.size.height - hotSpot.y();
     event_location.y -= flippedY;
     NSSize mouseOffset_unused = NSMakeSize(0.0, 0.0);
-    NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSPasteboardNameDrag];
+    NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
 
     [theWindow dragImage:dragImage
         at:event_location
@@ -185,7 +185,7 @@ bool QCocoaDrag::maybeDragMultipleItems()
     auto *sourceView = static_cast<NSView<NSDraggingSource>*>(theWindow.contentView);
 
     const auto &qtUrls = m_drag->mimeData()->urls();
-    NSPasteboard *dragBoard = [NSPasteboard pasteboardWithName:NSPasteboardNameDrag];
+    NSPasteboard *dragBoard = [NSPasteboard pasteboardWithName:NSDragPboard];
 
     if (qtUrls.size() <= 1) {
         // Good old -dragImage: works perfectly for this ...
@@ -195,7 +195,7 @@ bool QCocoaDrag::maybeDragMultipleItems()
     std::vector<NSPasteboardItem *> nonUrls;
     for (NSPasteboardItem *item in dragBoard.pasteboardItems) {
         bool isUrl = false;
-        for (NSPasteboardType type in item.types) {
+        for (NSString *type in item.types) {
             using NSStringRef = NSString *;
             if ([type isEqualToString:NSStringRef(kUTTypeFileURL)]) {
                 isUrl = true;

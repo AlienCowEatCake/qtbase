@@ -3955,7 +3955,7 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
                     pbCell = static_cast<NSPopUpButtonCell *>(pb.cell);
                     oldPosition = pbCell.arrowPosition;
                     pbCell.arrowPosition = NSPopUpNoArrow;
-                    if (pb.state == NSControlStateValueOff) {
+                    if (pb.state == NSOffState) {
                         // NSPopUpButton in this state is smaller.
                         rAdjusted.origin.x -= 3;
                         rAdjusted.size.width += 6;
