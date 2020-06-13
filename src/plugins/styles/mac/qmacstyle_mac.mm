@@ -3732,7 +3732,7 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
             [pb highlight:isPressed];
 
             if (cw.type == QMacStylePrivate::Button_SquareButton) {
-                pb.state = isHighlighted && !isPressed ? NSControlStateValueOn : NSControlStateValueOff;
+                pb.state = isHighlighted && !isPressed ? NSOnState : NSOffState;
             } else {
                 // For default/checked button this will give the required
                 // button accent color:
@@ -4027,7 +4027,7 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
                     pbCell = static_cast<NSPopUpButtonCell *>(pb.cell);
                     oldPosition = pbCell.arrowPosition;
                     pbCell.arrowPosition = NSPopUpNoArrow;
-                    if (pb.state == NSControlStateValueOff) {
+                    if (pb.state == NSOffState) {
                         // NSPopUpButton in this state is smaller.
                         rAdjusted.origin.x -= 3;
                         rAdjusted.size.width += 6;
