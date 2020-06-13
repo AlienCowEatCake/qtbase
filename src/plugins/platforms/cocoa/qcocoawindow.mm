@@ -1723,9 +1723,9 @@ void QCocoaWindow::registerTouch(bool enable)
 {
     m_registerTouchCount += enable ? 1 : -1;
     if (enable && m_registerTouchCount == 1)
-        m_view.allowedTouchTypes |= NSTouchTypeMaskIndirect;
+        [m_view setAcceptsTouchEvents:YES];
     else if (m_registerTouchCount == 0)
-        m_view.allowedTouchTypes &= ~NSTouchTypeMaskIndirect;
+        [m_view setAcceptsTouchEvents:NO];
 }
 
 void QCocoaWindow::setContentBorderThickness(int topThickness, int bottomThickness)
