@@ -45,6 +45,10 @@
 #include <CoreGraphics/CoreGraphics.h>
 #include <IOSurface/IOSurface.h>
 
+#if !QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
+#define kIOSurfaceSuccess kIOReturnSuccess
+#endif
+
 // CGColorSpaceCopyPropertyList is available on 10.12 and above,
 // but was only added in the 10.14 SDK, so declare it just in case.
 extern "C" CFPropertyListRef CGColorSpaceCopyPropertyList(CGColorSpaceRef space);
