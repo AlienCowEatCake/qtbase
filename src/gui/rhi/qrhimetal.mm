@@ -48,6 +48,10 @@
 #include <Metal/Metal.h>
 #include <QuartzCore/CAMetalLayer.h>
 
+#if !QT_MACOS_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13, __IPHONE_11_0)
+constexpr MTLLanguageVersion MTLLanguageVersion2_0 = static_cast<MTLLanguageVersion>((2 << 16));
+#endif
+
 QT_BEGIN_NAMESPACE
 
 /*
@@ -209,8 +213,10 @@ struct QRhiMetalData
     };
     QVector<TextureReadback> activeTextureReadbacks;
 
+#if QT_MACOS_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13, __IPHONE_11_0)
     API_AVAILABLE(macos(10.13), ios(11.0)) MTLCaptureManager *captureMgr;
     API_AVAILABLE(macos(10.13), ios(11.0)) id<MTLCaptureScope> captureScope = nil;
+#endif
 
     static const int TEXBUF_ALIGN = 256; // probably not accurate
 
@@ -380,6 +386,7 @@ bool QRhiMetal::create(QRhi::Flags flags)
     else
         d->cmdQueue = [d->dev newCommandQueue];
 
+#if QT_MACOS_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13, __IPHONE_11_0)
     if (@available(macOS 10.13, iOS 11.0, *)) {
         d->captureMgr = [MTLCaptureManager sharedCaptureManager];
         // Have a custom capture scope as well which then shows up in XCode as
@@ -389,6 +396,7 @@ bool QRhiMetal::create(QRhi::Flags flags)
         const QString label = QString::asprintf("Qt capture scope for QRhi %p", this);
         d->captureScope.label = label.toNSString();
     }
+#endif
 
 #if defined(Q_OS_MACOS)
     caps.maxTextureSize = 16384;
@@ -428,10 +436,12 @@ void QRhiMetal::destroy()
         s.release();
     d->shaderCache.clear();
 
+#if QT_MACOS_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13, __IPHONE_11_0)
     if (@available(macOS 10.13, iOS 11.0, *)) {
         [d->captureScope release];
         d->captureScope = nil;
     }
+#endif
 
     [d->cmdQueue release];
     if (!importedCmdQueue)
@@ -1284,8 +1294,10 @@ void QRhiMetal::debugMarkBegin(QRhiCommandBuffer *cb, const QByteArray &name)
     if (cbD->recordingPass != QMetalCommandBuffer::NoPass) {
         [cbD->d->currentRenderPassEncoder pushDebugGroup: str];
     } else {
+#if QT_MACOS_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13, __IPHONE_11_0)
         if (@available(macOS 10.13, iOS 11.0, *))
             [cbD->d->cb pushDebugGroup: str];
+#endif
     }
 }
 
@@ -1298,8 +1310,10 @@ void QRhiMetal::debugMarkEnd(QRhiCommandBuffer *cb)
     if (cbD->recordingPass != QMetalCommandBuffer::NoPass) {
         [cbD->d->currentRenderPassEncoder popDebugGroup];
     } else {
+#if QT_MACOS_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13, __IPHONE_11_0)
         if (@available(macOS 10.13, iOS 11.0, *))
             [cbD->d->cb popDebugGroup];
+#endif
     }
 }
 
@@ -1351,8 +1365,10 @@ QRhi::FrameOpResult QRhiMetal::beginFrame(QRhiSwapChain *swapChain, QRhi::BeginF
     if (swapChainD->ds)
         swapChainD->ds->lastActiveFrameSlot = currentFrameSlot;
 
+#if QT_MACOS_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13, __IPHONE_11_0)
     if (@available(macOS 10.13, iOS 11.0, *))
         [d->captureScope beginScope];
+#endif
 
     // Do not let the command buffer mess with the refcount of objects. We do
     // have a proper render loop and will manage lifetimes similarly to other
@@ -1405,8 +1421,10 @@ QRhi::FrameOpResult QRhiMetal::endFrame(QRhiSwapChain *swapChain, QRhi::EndFrame
     QRhiProfilerPrivate *rhiP = profilerPrivateOrNull();
     QRHI_PROF_F(endSwapChainFrame(swapChain, swapChainD->frameCount + 1));
 
+#if QT_MACOS_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13, __IPHONE_11_0)
     if (@available(macOS 10.13, iOS 11.0, *))
         [d->captureScope endScope];
+#endif
 
     if (needsPresent)
         swapChainD->currentFrameSlot = (swapChainD->currentFrameSlot + 1) % QMTL_FRAMES_IN_FLIGHT;
@@ -3078,9 +3096,11 @@ static inline MTLVertexFormat toMetalAttributeFormat(QRhiVertexInputAttribute::F
     case QRhiVertexInputAttribute::UNormByte2:
         return MTLVertexFormatUChar2Normalized;
     case QRhiVertexInputAttribute::UNormByte:
+#if QT_MACOS_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13, __IPHONE_11_0)
         if (@available(macOS 10.13, iOS 11.0, *))
             return MTLVertexFormatUCharNormalized;
         else
+#endif
             Q_UNREACHABLE();
     default:
         Q_UNREACHABLE();
@@ -3815,8 +3835,10 @@ bool QMetalSwapChain::buildOrResize()
 
 #ifdef Q_OS_MACOS
     if (m_flags.testFlag(NoVSync)) {
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
         if (@available(macOS 10.13, *))
             d->layer.displaySyncEnabled = NO;
+#endif
     }
 #endif
 
