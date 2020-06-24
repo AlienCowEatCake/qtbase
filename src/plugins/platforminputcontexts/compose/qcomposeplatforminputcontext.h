@@ -43,7 +43,9 @@
 
 #include <qpa/qplatforminputcontext.h>
 
-#include <xkbcommon/xkbcommon-compose.h>
+#include <QtCore/QList>
+
+#include "generator/qtablegenerator.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -66,18 +68,21 @@ public:
     bool filterEvent(const QEvent *event) override;
 
     // This invokable is called from QXkbCommon::setXkbContext().
-    Q_INVOKABLE void setXkbContext(struct xkb_context *context) { m_XkbContext = context; }
+    Q_INVOKABLE void setXkbContext(struct xkb_context *context) {}
 
 protected:
-    void ensureInitialized();
+    void clearComposeBuffer();
+    bool ignoreKey(int keyval) const;
+    bool composeKey(int keyval) const;
+    bool checkComposeTable();
+    void commitText(uint character);
 
 private:
-    bool m_initialized = false;
-    xkb_context *m_context = nullptr;
-    xkb_compose_table *m_composeTable = nullptr;
-    xkb_compose_state *m_composeState = nullptr;
     QObject *m_focusObject = nullptr;
-    struct xkb_context *m_XkbContext = nullptr;
+    QVector<QComposeTableElement> m_composeTable;
+    uint m_composeBuffer[QT_KEYSEQUENCE_MAX_LEN];
+    TableGenerator::TableState m_tableState;
+    bool m_compositionTableInitialized;
 };
 
 QT_END_NAMESPACE
