@@ -71,16 +71,10 @@ void QComposeInputContext::ensureInitialized()
     }
 
     m_initialized = true;
-    // Get locale from user env settings, see also
-    // https://xkbcommon.org/doc/current/group__compose.html#compose-locale
-    const char *locale = getenv("LC_ALL");
-    if (!locale || !*locale)
-        locale = getenv("LC_CTYPE");
-    if (!locale || !*locale)
-        locale = getenv("LANG");
-    if (!locale || !*locale)
-         locale = "C";
-    qCDebug(lcXkbCompose) << "detected locale:" << locale;
+    const char *locale = setlocale(LC_CTYPE, "");
+    if (!locale)
+        locale = setlocale(LC_CTYPE, nullptr);
+    qCDebug(lcXkbCompose) << "detected locale (LC_CTYPE):" << locale;
 
     m_composeTable = xkb_compose_table_new_from_locale(m_XkbContext, locale, XKB_COMPOSE_COMPILE_NO_FLAGS);
     if (m_composeTable)
