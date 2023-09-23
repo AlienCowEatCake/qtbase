@@ -276,10 +276,12 @@ macx-xcode {
     QMAKE_PCH_OUTPUT_EXT = _${QMAKE_PCH_ARCH}$${QMAKE_PCH_OUTPUT_EXT}
 }
 
-!equals(sdk_version, $$QMAKE_MAC_SDK_VERSION) {
-    # Explicit SDK version has been set, respect that
-    QMAKE_LFLAGS += -Wl,-sdk_version -Wl,$$sdk_version
-}
+# TODO: FIXME: Doesn't work anymore with Xcode 15 & SDK 14.0:
+# ld: unknown options: -sdk_version
+#!equals(sdk_version, $$QMAKE_MAC_SDK_VERSION) {
+#    # Explicit SDK version has been set, respect that
+#    QMAKE_LFLAGS += -Wl,-sdk_version -Wl,$$sdk_version
+#}
 
 cache(QMAKE_XCODE_DEVELOPER_PATH, stash)
 !isEmpty(QMAKE_XCODE_VERSION): \
