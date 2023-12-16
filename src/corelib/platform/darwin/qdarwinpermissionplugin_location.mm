@@ -97,8 +97,10 @@ struct PermissionRequest
 - (CLAuthorizationStatus)authorizationStatus
 {
     if (self.manager) {
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
         if (@available(macOS 11, iOS 14, *))
             return self.manager.authorizationStatus;
+#endif
     }
 
     return CLLocationManager.authorizationStatus;
@@ -106,6 +108,7 @@ struct PermissionRequest
 
 - (Qt::PermissionStatus)accuracyAuthorization:(QLocationPermission)permission
 {
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
     auto status = CLAccuracyAuthorizationReducedAccuracy;
     if (@available(macOS 11, iOS 14, *))
         status = self.manager.accuracyAuthorization;
@@ -122,6 +125,9 @@ struct PermissionRequest
 
     qCWarning(lcPermissions) << "Unknown accuracy status" << status << "detected in" << self;
     return Qt::PermissionStatus::Denied;
+#else
+    return Qt::PermissionStatus::Granted;
+#endif
 }
 
 - (QStringList)usageDescriptionsFor:(QPermission)permission
@@ -169,9 +175,11 @@ struct PermissionRequest
         // The documentation specifies that requestWhenInUseAuthorization can
         // only be called when the current authorization status is undetermined.
         switch ([self authorizationStatus]) {
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
         case kCLAuthorizationStatusNotDetermined:
             [self.manager requestWhenInUseAuthorization];
             break;
+#endif
         default:
             [self deliverResult];
         }

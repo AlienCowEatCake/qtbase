@@ -150,8 +150,10 @@ bool QCocoaMessageDialog::show(Qt::WindowFlags windowFlags, Qt::WindowModality w
             cancelButtonAdded = true;
         }
 
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
         if (@available(macOS 11, *))
             button.hasDestructiveAction = role == DestructiveRole;
+#endif
 
         // The NSModalResponse of showing an NSAlert normally depends on the order of the
         // button that was clicked, starting from the right with NSAlertFirstButtonReturn (1000),
