@@ -393,10 +393,12 @@ QT_USE_NAMESPACE
 
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)application
 {
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(120000)
     if (@available(macOS 12, *)) {
         if ([reflectionDelegate respondsToSelector:_cmd])
             return [reflectionDelegate applicationSupportsSecureRestorableState:application];
     }
+#endif
 
     // We don't support or implement state restorations via the AppKit
     // state restoration APIs, but if we did, we would/should support
