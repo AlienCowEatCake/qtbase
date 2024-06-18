@@ -279,7 +279,12 @@ auto *loadImage(const QString &iconName)
     });
     NSString *systemIconName = it != std::end(iconMap) ? it->second : iconName.toNSString();
 #if defined(Q_OS_MACOS)
-    return [NSImage imageWithSystemSymbolName:systemIconName accessibilityDescription:nil];
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
+    if (@available(macOS 11.0, *)) {
+        return [NSImage imageWithSystemSymbolName:systemIconName accessibilityDescription:nil];
+    }
+#endif
+    return (NSImage *)nil;
 #elif defined(Q_OS_IOS)
     return [UIImage systemImageNamed:systemIconName];
 #endif
@@ -357,22 +362,29 @@ QPixmap QAppleIconEngine::pixmap(const QSize &size, QIcon::Mode mode, QIcon::Sta
 
 namespace {
 #if defined(Q_OS_MACOS)
-auto *configuredImage(const NSImage *image, const QColor &color)
+const auto *configuredImage(const NSImage *image, const QColor &color)
 {
-    auto *config = [NSImageSymbolConfiguration configurationWithPointSize:48
-                                               weight:NSFontWeightRegular
-                                               scale:NSImageSymbolScaleLarge];
-    if (@available(macOS 12, *)) {
-        auto *primaryColor = [NSColor colorWithSRGBRed:color.redF()
-                                                 green:color.greenF()
-                                                  blue:color.blueF()
-                                                 alpha:color.alphaF()];
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
+    if (@available(macOS 11, *)) {
+        auto *config = [NSImageSymbolConfiguration configurationWithPointSize:48
+                                                   weight:NSFontWeightRegular
+                                                   scale:NSImageSymbolScaleLarge];
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(120000)
+        if (@available(macOS 12, *)) {
+            auto *primaryColor = [NSColor colorWithSRGBRed:color.redF()
+                                                     green:color.greenF()
+                                                      blue:color.blueF()
+                                                     alpha:color.alphaF()];
 
-        auto *colorConfig = [NSImageSymbolConfiguration configurationWithHierarchicalColor:primaryColor];
-        config = [config configurationByApplyingConfiguration:colorConfig];
+            auto *colorConfig = [NSImageSymbolConfiguration configurationWithHierarchicalColor:primaryColor];
+            config = [config configurationByApplyingConfiguration:colorConfig];
+        }
+#endif
+
+        return [image imageWithSymbolConfiguration:config];
     }
-
-    return [image imageWithSymbolConfiguration:config];
+#endif
+    return image;
 }
 #elif defined(Q_OS_IOS)
 auto *configuredImage(const UIImage *image, const QColor &color)

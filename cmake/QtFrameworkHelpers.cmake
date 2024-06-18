@@ -53,6 +53,16 @@ function(qt_internal_find_apple_system_framework out_var framework_name)
 
     find_library(${cache_var_name} "${framework_name}")
 
+    # Dirty hack for 10.15 build
+    if("${framework_name}" STREQUAL "UniformTypeIdentifiers")
+        if(${cache_var_name} AND NOT ${cache_var_name} MATCHES "^/System/Library/Frameworks.*")
+            set(${out_var} "-weak_framework ${framework_name}" PARENT_SCOPE)
+        else()
+            set(${out_var} "" PARENT_SCOPE)
+        endif()
+        return()
+    endif()
+
     if(${cache_var_name} AND ${cache_var_name} MATCHES ".framework$")
         set(${out_var} "-framework ${framework_name}" PARENT_SCOPE)
     else()
