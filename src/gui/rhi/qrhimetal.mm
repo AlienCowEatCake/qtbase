@@ -173,7 +173,9 @@ struct QRhiMetalData
     QRhiMetal *q;
     id<MTLDevice> dev = nil;
     id<MTLCommandQueue> cmdQueue = nil;
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
     API_AVAILABLE(macosx(11.0), ios(14.0)) id<MTLBinaryArchive> binArch = nil;
+#endif
 
     id<MTLCommandBuffer> newCommandBuffer();
     MTLRenderPassDescriptor *createDefaultRenderPass(bool hasDepthStencil,
@@ -528,6 +530,7 @@ bool QRhiMetalData::setupBinaryArchive(NSURL *sourceFileUrl)
     return false;
 #endif
 
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
     if (@available(macOS 11.0, iOS 14.0, *)) {
         [binArch release];
         MTLBinaryArchiveDescriptor *binArchDesc = [MTLBinaryArchiveDescriptor new];
@@ -542,6 +545,7 @@ bool QRhiMetalData::setupBinaryArchive(NSURL *sourceFileUrl)
         }
         return true;
     }
+#endif
     return false;
 }
 
@@ -567,7 +571,7 @@ bool QRhiMetal::create(QRhi::Flags flags)
     // suitable as deviceId because it does not seem stable on macOS and can
     // apparently change when the system is rebooted.
 
-#ifdef Q_OS_MACOS
+#if defined(Q_OS_MACOS) && QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(101500)
     if (@available(macOS 10.15, *)) {
         const MTLDeviceLocation deviceLocation = [d->dev location];
         switch (deviceLocation) {
@@ -608,8 +612,10 @@ bool QRhiMetal::create(QRhi::Flags flags)
 #if defined(Q_OS_MACOS)
     caps.maxTextureSize = 16384;
     caps.baseVertexAndInstance = true;
-    if (@available(macOS 10.15, *))
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
+    if (@available(macOS 11.0, *))
         caps.isAppleGPU = [d->dev supportsFamily:MTLGPUFamilyApple7];
+#endif
     caps.maxThreadGroupSize = 1024;
     caps.multiView = true;
 #elif defined(Q_OS_TVOS)
@@ -666,10 +672,12 @@ void QRhiMetal::destroy()
     [d->captureScope release];
     d->captureScope = nil;
 
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
     if (@available(macOS 11.0, iOS 14.0, *)) {
         [d->binArch release];
         d->binArch = nil;
     }
+#endif
 
     [d->cmdQueue release];
     if (!importedCmdQueue)
@@ -817,9 +825,11 @@ bool QRhiMetal::isFeatureSupported(QRhi::Feature feature) const
         return true;
     case QRhi::PipelineCacheDataLoadSave:
     {
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
         if (@available(macOS 11.0, iOS 14.0, *))
             return true;
         else
+#endif
             return false;
     }
     case QRhi::ImageDataStride:
@@ -949,6 +959,7 @@ QByteArray QRhiMetal::pipelineCacheData()
 {
     Q_STATIC_ASSERT(sizeof(QMetalPipelineCacheDataHeader) == 256);
     QByteArray data;
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
     if (@available(macOS 11.0, iOS 14.0, *)) {
         if (!d->binArch || !rhiFlags.testFlag(QRhi::EnablePipelineCacheDataSave))
             return data;
@@ -997,6 +1008,7 @@ QByteArray QRhiMetal::pipelineCacheData()
         memcpy(data.data(), &header, headerSize);
         memcpy(data.data() + headerSize, blob.constData(), dataSize);
     }
+#endif
     return data;
 }
 
@@ -1046,6 +1058,7 @@ void QRhiMetal::setPipelineCacheData(const QByteArray &data)
         return;
     }
 
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
     if (@available(macOS 11.0, iOS 14.0, *)) {
         const char *p = data.constData() + dataOffset;
 
@@ -1062,6 +1075,7 @@ void QRhiMetal::setPipelineCacheData(const QByteArray &data)
         if (d->setupBinaryArchive(url))
             qCDebug(QRHI_LOG_INFO, "Created MTLBinaryArchive with initial data of %u bytes", header.dataSize);
     }
+#endif
 }
 
 QRhiRenderBuffer *QRhiMetal::createRenderBuffer(QRhiRenderBuffer::Type type, const QSize &pixelSize,
@@ -3523,6 +3537,7 @@ static inline MTLPixelFormat toMetalTextureFormat(QRhiTexture::Format format, QR
     case QRhiTexture::ASTC_12x12:
         return srgb ? MTLPixelFormatASTC_12x12_sRGB : MTLPixelFormatASTC_12x12_LDR;
 #else
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
     case QRhiTexture::ETC2_RGB8:
         if (d->caps.isAppleGPU) {
             if (@available(macOS 11.0, *))
@@ -3643,6 +3658,7 @@ static inline MTLPixelFormat toMetalTextureFormat(QRhiTexture::Format format, QR
         qWarning("QRhiMetal: ASTC compression not supported on this platform");
         return MTLPixelFormatInvalid;
 #endif
+#endif
 
     default:
         Q_UNREACHABLE();
@@ -3707,12 +3723,14 @@ bool QMetalRenderBuffer::create()
     case DepthStencil:
 #ifdef Q_OS_MACOS
         if (rhiD->caps.isAppleGPU) {
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
             if (@available(macOS 11.0, *)) {
                 desc.storageMode = MTLStorageModeMemoryless;
                 d->format = MTLPixelFormatDepth32Float_Stencil8;
             } else {
                 Q_UNREACHABLE();
             }
+#endif
         } else {
             desc.storageMode = MTLStorageModePrivate;
             d->format = rhiD->d->dev.depth24Stencil8PixelFormatSupported
@@ -5000,16 +5018,19 @@ void QMetalGraphicsPipelineData::setupStageInputDescriptor(MTLStageInputOutputDe
 
 void QRhiMetalData::trySeedingRenderPipelineFromBinaryArchive(MTLRenderPipelineDescriptor *rpDesc)
 {
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
     if (@available(macOS 11.0, iOS 14.0, *)) {
         if (binArch)  {
             NSArray *binArchArray = [NSArray arrayWithObjects: binArch, nil];
             rpDesc.binaryArchives = binArchArray;
         }
     }
+#endif
 }
 
 void QRhiMetalData::addRenderPipelineToBinaryArchive(MTLRenderPipelineDescriptor *rpDesc)
 {
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
     if (@available(macOS 11.0, iOS 14.0, *)) {
         if (binArch) {
             NSError *err = nil;
@@ -5019,6 +5040,7 @@ void QRhiMetalData::addRenderPipelineToBinaryArchive(MTLRenderPipelineDescriptor
             }
         }
     }
+#endif
 }
 
 bool QMetalGraphicsPipeline::createVertexFragmentPipeline()
@@ -5986,16 +6008,19 @@ void QMetalComputePipeline::destroy()
 
 void QRhiMetalData::trySeedingComputePipelineFromBinaryArchive(MTLComputePipelineDescriptor *cpDesc)
 {
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
     if (@available(macOS 11.0, iOS 14.0, *)) {
         if (binArch)  {
             NSArray *binArchArray = [NSArray arrayWithObjects: binArch, nil];
             cpDesc.binaryArchives = binArchArray;
         }
     }
+#endif
 }
 
 void QRhiMetalData::addComputePipelineToBinaryArchive(MTLComputePipelineDescriptor *cpDesc)
 {
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
     if (@available(macOS 11.0, iOS 14.0, *)) {
         if (binArch) {
             NSError *err = nil;
@@ -6005,6 +6030,7 @@ void QRhiMetalData::addComputePipelineToBinaryArchive(MTLComputePipelineDescript
             }
         }
     }
+#endif
 }
 
 bool QMetalComputePipeline::create()
@@ -6278,9 +6304,11 @@ bool QMetalSwapChain::isFormatSupported(Format f)
         else
             return false;
     } else if (f == HDRExtendedDisplayP3Linear) {
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
         if (@available(macOS 11.0, iOS 14.0, *))
             return hdrInfo().limits.colorComponentValue.maxPotentialColorComponentValue > 1.0f;
         else
+#endif
             return false;
     }
     return f == SDR;
@@ -6371,10 +6399,12 @@ bool QMetalSwapChain::createOrResize()
             d->layer.wantsExtendedDynamicRangeContent = YES;
         }
     } else if (m_format == HDRExtendedDisplayP3Linear) {
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
         if (@available(macOS 11.0, iOS 16.0, *)) {
             d->layer.colorspace = CGColorSpaceCreateWithName(kCGColorSpaceExtendedLinearDisplayP3);
             d->layer.wantsExtendedDynamicRangeContent = YES;
         }
+#endif
     }
 
     if (m_flags.testFlag(UsedAsTransferSource))

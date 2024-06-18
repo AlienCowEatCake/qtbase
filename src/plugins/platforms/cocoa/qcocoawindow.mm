@@ -293,19 +293,29 @@ QMargins QCocoaWindow::safeAreaMargins() const
     // the current view (by setting additionalSafeAreaInsets). If the window
     // uses NSWindowStyleMaskFullSizeContentView this also includes the area
     // of the view covered by the title bar.
-    QMarginsF viewSafeAreaMargins = {
-        m_view.safeAreaInsets.left,
-        m_view.safeAreaInsets.top,
-        m_view.safeAreaInsets.right,
-        m_view.safeAreaInsets.bottom
-    };
+    QMarginsF viewSafeAreaMargins;
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
+    if (@available(macOS 11, *)) {
+        viewSafeAreaMargins = {
+            m_view.safeAreaInsets.left,
+            m_view.safeAreaInsets.top,
+            m_view.safeAreaInsets.right,
+            m_view.safeAreaInsets.bottom
+        };
+    }
+#endif
 
     // The screen's safe area insets represent the distances from the screen's
     // edges at which content isn't obscured. The view's safe area margins do
     // not include the screen's insets automatically, so we need to manually
     // merge them.
     auto screenRect = m_view.window.screen.frame;
-    auto screenInsets = m_view.window.screen.safeAreaInsets;
+    NSEdgeInsets screenInsets = NSEdgeInsetsZero;
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(120000)
+    if (@available(macOS 12, *)) {
+        screenInsets = m_view.window.screen.safeAreaInsets;
+    }
+#endif
     auto screenRelativeViewBounds = QCocoaScreen::mapFromNative(
         [m_view.window convertRectToScreen:
             [m_view convertRect:m_view.bounds toView:nil]]
