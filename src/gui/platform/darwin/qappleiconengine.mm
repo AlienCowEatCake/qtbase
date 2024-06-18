@@ -279,7 +279,12 @@ auto *loadImage(const QString &iconName)
     });
     NSString *systemIconName = it != std::end(iconMap) ? it->second : iconName.toNSString();
 #if defined(Q_OS_MACOS)
-    return [NSImage imageWithSystemSymbolName:systemIconName accessibilityDescription:nil];
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
+    if (@available(macOS 11.0, *)) {
+        return [NSImage imageWithSystemSymbolName:systemIconName accessibilityDescription:nil];
+    }
+#endif
+    return (NSImage *)nil;
 #elif defined(QT_PLATFORM_UIKIT)
     return [UIImage systemImageNamed:systemIconName];
 #endif
@@ -357,28 +362,39 @@ QPixmap QAppleIconEngine::pixmap(const QSize &size, QIcon::Mode mode, QIcon::Sta
 
 namespace {
 #if defined(Q_OS_MACOS)
-auto *configuredImage(const NSImage *image, const QColor &color)
+const auto *configuredImage(const NSImage *image, const QColor &color)
 {
-    auto *config = [NSImageSymbolConfiguration configurationWithPointSize:48
-                                               weight:NSFontWeightRegular
-                                               scale:NSImageSymbolScaleLarge];
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
+    if (@available(macOS 11, *)) {
+        auto *config = [NSImageSymbolConfiguration configurationWithPointSize:48
+                                                   weight:NSFontWeightRegular
+                                                   scale:NSImageSymbolScaleLarge];
 
-    NSImage *configuredImage = [image imageWithSymbolConfiguration:config];
+        NSImage *configuredImage = [image imageWithSymbolConfiguration:config];
 
-    auto *primaryColor = [NSColor colorWithSRGBRed:color.redF()
-                                             green:color.greenF()
-                                              blue:color.blueF()
-                                             alpha:color.alphaF()];
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(120000)
+        if (@available(macOS 12, *)) {
+            auto *primaryColor = [NSColor colorWithSRGBRed:color.redF()
+                                                     green:color.greenF()
+                                                      blue:color.blueF()
+                                                     alpha:color.alphaF()];
 
-    NSImage *tintedImage = [NSImage imageWithSize:configuredImage.size flipped:NO
-        drawingHandler:^BOOL(NSRect) {
-            [primaryColor set];
-            NSRect imageRect = {NSZeroPoint, configuredImage.size};
-            [configuredImage drawInRect:imageRect];
-            NSRectFillUsingOperation(imageRect, NSCompositingOperationSourceIn);
-            return YES;
-        }];
-    return tintedImage;
+            NSImage *tintedImage = [NSImage imageWithSize:configuredImage.size flipped:NO
+                drawingHandler:^BOOL(NSRect) {
+                    [primaryColor set];
+                    NSRect imageRect = {NSZeroPoint, configuredImage.size};
+                    [configuredImage drawInRect:imageRect];
+                    NSRectFillUsingOperation(imageRect, NSCompositingOperationSourceIn);
+                    return YES;
+                }];
+            return tintedImage;
+        }
+#endif
+
+        return configuredImage;
+    }
+#endif
+    return image;
 }
 #elif defined(QT_PLATFORM_UIKIT)
 auto *configuredImage(const UIImage *image, const QColor &color)
