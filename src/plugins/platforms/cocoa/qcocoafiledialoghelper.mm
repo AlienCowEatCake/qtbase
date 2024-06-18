@@ -25,7 +25,9 @@
 #include <qpa/qplatformtheme.h>
 #include <qpa/qplatformnativeinterface.h>
 
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
 #include <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+#endif
 
 QT_USE_NAMESPACE
 
@@ -305,7 +307,11 @@ typedef QSharedPointer<QFileDialogOptions> SharedPointerFileDialogOptions;
                         fileInfo.absoluteDir().dirName().toNSString()];
 
             auto *replaceButton = [alert addButtonWithTitle:qt_mac_AppKitString(@"SavePanel", @"Replace")];
-            replaceButton.hasDestructiveAction = YES;
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
+            if (@available(macOS 11, *)) {
+                replaceButton.hasDestructiveAction = YES;
+            }
+#endif
             replaceButton.tag = 1337;
             [alert addButtonWithTitle:qt_mac_AppKitString(@"Common", @"Cancel")];
 
@@ -454,15 +460,19 @@ typedef QSharedPointer<QFileDialogOptions> SharedPointerFileDialogOptions;
     // We work around this by temporarily resetting the allowed
     // content type to one without an extension, which forces
     // the save panel to update and remove the extension.
-    const bool nameFieldHasExtension = m_panel.nameFieldStringValue.pathExtension.length > 0;
-    if (!m_panel.allowedFileTypes && !nameFieldHasExtension && !openpanel_cast(m_panel)) {
-        if (!UTTypeDirectory.preferredFilenameExtension) {
-            m_panel.allowedContentTypes = @[ UTTypeDirectory ];
-            m_panel.allowedFileTypes = nil;
-        } else {
-            qWarning() << "UTTypeDirectory unexpectedly reported an extension";
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(110000)
+    if (@available(macOS 11.0, *)) {
+        const bool nameFieldHasExtension = m_panel.nameFieldStringValue.pathExtension.length > 0;
+        if (!m_panel.allowedFileTypes && !nameFieldHasExtension && !openpanel_cast(m_panel)) {
+            if (!UTTypeDirectory.preferredFilenameExtension) {
+                m_panel.allowedContentTypes = @[ UTTypeDirectory ];
+                m_panel.allowedFileTypes = nil;
+            } else {
+                qWarning() << "UTTypeDirectory unexpectedly reported an extension";
+            }
         }
     }
+#endif
 
     m_panel.showsHiddenFiles = m_options->filter().testFlag(QDir::Hidden);
 
