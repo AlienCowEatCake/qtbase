@@ -103,15 +103,19 @@ struct PermissionRequest
 
 - (CLAuthorizationStatus)authorizationStatus
 {
-    if (self.manager)
-        return self.manager.authorizationStatus;
+    if (self.manager) {
+        if (@available(macOS 11, iOS 14, *))
+            return self.manager.authorizationStatus;
+    }
 
     return QT_IGNORE_DEPRECATIONS(CLLocationManager.authorizationStatus);
 }
 
 - (Qt::PermissionStatus)accuracyAuthorization:(QLocationPermission)permission
 {
-    auto status = self.manager.accuracyAuthorization;
+    auto status = CLAccuracyAuthorizationReducedAccuracy;
+    if (@available(macOS 11, iOS 14, *))
+        status = self.manager.accuracyAuthorization;
 
     switch (status) {
     case CLAccuracyAuthorizationFullAccuracy:
