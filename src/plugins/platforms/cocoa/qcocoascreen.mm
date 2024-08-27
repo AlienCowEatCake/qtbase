@@ -200,7 +200,7 @@ QCocoaScreen::~QCocoaScreen()
 static QString displayName(CGDirectDisplayID displayID)
 {
     QIOType<io_iterator_t> iterator;
-    if (IOServiceGetMatchingServices(kIOMainPortDefault,
+    if (IOServiceGetMatchingServices(kIOMasterPortDefault,
         IOServiceMatching("IODisplayConnect"), &iterator))
         return QString();
 
