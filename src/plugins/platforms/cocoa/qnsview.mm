@@ -5,7 +5,6 @@
 
 #include <AppKit/AppKit.h>
 #include <MetalKit/MetalKit.h>
-#include <UniformTypeIdentifiers/UTCoreTypes.h>
 
 #include "qnsview.h"
 #include "qcocoawindow.h"
@@ -426,7 +425,7 @@ QT_NAMESPACE_ALIAS_OBJC_CLASS(QNSViewMenuHelper);
 
 - (QCocoaWindow*)platformWindow
 {
-    return m_platformWindow.data();;
+    return m_platformWindow.data();
 }
 
 @end
