@@ -37,17 +37,6 @@ void QCocoaDrag::setLastInputEvent(NSEvent *event, NSView *view)
     m_lastView = view;
 }
 
-void QCocoaDrag::viewDestroyed(NSView *view)
-{
-    if (view == m_lastView) {
-        if (m_lastEvent.window.contentView == view) {
-            [m_lastEvent release];
-            m_lastEvent = nil;
-        }
-        m_lastView = nil;
-    }
-}
-
 QMimeData *QCocoaDrag::dragMimeData()
 {
     if (m_drag)
@@ -106,8 +95,11 @@ Qt::DropAction QCocoaDrag::defaultAction(Qt::DropActions possibleActions,
 Qt::DropAction QCocoaDrag::drag(QDrag *o)
 {
     m_executed_drop_action = Qt::IgnoreAction;
-    if (!m_lastEvent)
+    if (!m_lastView) {
+        [m_lastEvent release];
+        m_lastEvent = nil;
         return m_executed_drop_action;
+    }
 
     m_drag = o;
     QMacPasteboard dragBoard(CFStringRef(NSPasteboardNameDrag), QUtiMimeConverter::HandlerScopeFlag::DnD);
@@ -150,7 +142,7 @@ bool QCocoaDrag::maybeDragMultipleItems()
 
     const QMacAutoReleasePool pool;
 
-    NSView *view = m_lastView ? m_lastView : m_lastEvent.window.contentView;
+    NSView *view = m_lastView ? static_cast<NSView*>(m_lastView) : m_lastEvent.window.contentView;
     if (![view respondsToSelector:@selector(draggingSession:sourceOperationMaskForDraggingContext:)])
         return false;
 
