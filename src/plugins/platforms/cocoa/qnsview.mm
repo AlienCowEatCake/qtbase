@@ -286,12 +286,20 @@ QT_NAMESPACE_ALIAS_OBJC_CLASS(QNSViewMenuHelper);
 
 - (void)didAddSubview:(NSView *)subview
 {
-    self.clipsToBounds = YES;
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(140000)
+    if (@available(macOS 14, *)) {
+        self.clipsToBounds = YES;
+    }
+#endif
 }
 
 - (void)willRemoveSubview:(NSView *)subview
 {
-    self.clipsToBounds = self.subviews.count > 1;
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(140000)
+    if (@available(macOS 14, *)) {
+        self.clipsToBounds = self.subviews.count > 1;
+    }
+#endif
 }
 
 // ----------------------------------------------------------------------------

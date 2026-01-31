@@ -512,6 +512,7 @@ void QCocoaScreen::maybeStopDisplayLink()
 
 void QCocoaScreen::updateHdrWindows()
 {
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(140000)
     if (@available(macOS 14, *)) {
         for (auto *window : QGuiApplication::allWindows()) {
             auto *platformWindow = static_cast<QCocoaWindow*>(window->handle());
@@ -526,6 +527,7 @@ void QCocoaScreen::updateHdrWindows()
             [view setNeedsDisplay:YES];
         }
     }
+#endif
 }
 
 // -----------------------------------------------------------

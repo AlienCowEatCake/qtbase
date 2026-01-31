@@ -2281,10 +2281,14 @@ void QMacStylePrivate::drawProgressBar(QPainter* p, const QStyleOptionProgressBa
     // Draw groove
     p->save();
     p->setRenderHint(QPainter::Antialiasing, true);
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(140000)
     if (@available(macOS 14.0, *)) { // silence compiler
         p->setPen(qt_mac_toQBrush([NSColor secondarySystemFillColor]).color());
         p->setBrush(qt_mac_toQBrush([NSColor tertiarySystemFillColor]).color());
     } else {
+#else
+    if (true) {
+#endif
         p->setPen(Qt::NoPen);
         p->setBrush(qt_mac_toQBrush([NSColor controlColor]).color());
     }

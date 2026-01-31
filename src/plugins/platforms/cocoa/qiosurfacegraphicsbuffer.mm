@@ -47,9 +47,13 @@ QIOSurfaceGraphicsBuffer::QIOSurfaceGraphicsBuffer(const QSize &size, const QPix
     Q_ASSERT(size_t(bytesPerLine()) == bytesPerRow);
     Q_ASSERT(size_t(byteCount()) == totalBytes);
 
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(130000)
     QObject::connect(this, &QObject::objectNameChanged, this, [this]{
-        IOSurfaceSetValue(m_surface, kIOSurfaceName, objectName().toNSString());
+        if (@available(macOS 13, *)) {
+            IOSurfaceSetValue(m_surface, kIOSurfaceName, objectName().toNSString());
+        }
     });
+#endif
 }
 
 QIOSurfaceGraphicsBuffer::~QIOSurfaceGraphicsBuffer()
